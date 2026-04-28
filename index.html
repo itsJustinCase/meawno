@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MEAWNO | C3-B4_RECON</title>
+    <title>MEAWNO | FULL_ARCHIVE</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -12,15 +12,25 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Press Start 2P', cursive; }
+        body { background-color: var(--bg); color: var(--g); height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
 
-        body {
-            background-color: var(--bg);
-            color: var(--g);
-            height: 100dvh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+        #menu-overlay {
+            position: fixed; inset: 0; background: var(--bg); z-index: 1000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+            overflow-y: auto;
         }
+
+        .menu-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+            width: 100%; max-width: 700px; margin-top: 20px;
+        }
+
+        .lvl-card {
+            border: 2px solid var(--gm); padding: 12px; text-align: center;
+            cursor: pointer; font-size: 7px; line-height: 1.4; transition: 0.1s;
+        }
+
+        .lvl-card:hover { border-color: var(--g); background: var(--gk); transform: scale(1.02); }
 
         #hud {
             height: 50px; border-bottom: 2px solid var(--gm);
@@ -31,161 +41,144 @@
         #game-world {
             flex: 1; display: flex; flex-direction: column; align-items: center;
             justify-content: center; background: radial-gradient(circle, #001a05 0%, #000800 100%);
+            position: relative;
         }
 
-        #cat-track {
-            width: 85%; height: 40px; border-bottom: 2px dashed var(--gm);
-            position: relative; margin-bottom: 15px;
+        #target-display { font-size: 48px; margin-bottom: 15px; color: #fff; text-shadow: 0 0 20px var(--g); }
+        
+        #trail-container {
+            width: 85%; height: 60px; border-bottom: 2px dashed var(--gm);
+            position: relative; margin-bottom: 20px; display: flex; align-items: flex-end;
         }
 
-        #cat { position: absolute; bottom: 5px; left: 0; font-size: 20px; transition: left 0.1s; }
+        #cat { position: absolute; bottom: 8px; left: 0; font-size: 30px; transform: scaleX(-1); transition: left 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 5; }
 
-        #target-display { font-size: 32px; margin-bottom: 5px; text-shadow: 0 0 15px var(--g); }
+        #piano-scroll { width: 100%; overflow-x: auto; background: #000; border-top: 4px solid var(--gm); padding: 15px 0; }
+        #piano { display: flex; position: relative; height: 160px; width: 1200px; margin: 0 auto; }
+        .key { position: relative; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; font-size: 7px; }
+        .key.white { width: 80px; height: 100%; background: var(--w); border: 1px solid #999; border-radius: 0 0 5px 5px; color: #333; z-index: 1; }
+        .key.black { width: 44px; height: 60%; background: var(--b); border: 1px solid #000; border-radius: 0 0 3px 3px; z-index: 2; margin-left: -22px; margin-right: -22px; color: var(--gd); }
 
-        /* PIANO ARCHITECTURE */
-        #piano-scroll {
-            width: 100%; overflow-x: auto; background: #000;
-            border-top: 4px solid var(--gm); padding: 20px 0;
+        .key.active-right { background: var(--g) !important; color: #000 !important; box-shadow: 0 0 30px var(--g); z-index: 3; }
+        .key.active-wrong { background: var(--err) !important; color: #fff !important; z-index: 3; }
+        
+        .key.target-hint { 
+            border: 3px solid #fff; 
+            animation: pulse 1.2s infinite;
+            z-index: 4;
         }
 
-        #piano {
-            display: flex; position: relative; height: 220px; 
-            width: 1200px; /* Large enough for 14 white keys */
-            margin: 0 auto;
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 5px var(--g); }
+            50% { box-shadow: 0 0 25px var(--g); }
         }
 
-        .key {
-            position: relative; cursor: pointer; transition: background 0.1s;
-        }
-
-        .key.white {
-            width: 80px; height: 100%;
-            background: var(--w); border: 1px solid #999;
-            border-bottom: 8px solid #ccc; border-radius: 0 0 6px 6px;
-            z-index: 1; display: flex; align-items: flex-end;
-            justify-content: center; padding-bottom: 10px;
-            color: #333; font-size: 8px;
-        }
-
-        .key.black {
-            width: 46px; height: 60%;
-            background: var(--b); border: 1px solid #000;
-            border-bottom: 6px solid #444; border-radius: 0 0 4px 4px;
-            z-index: 2; margin-left: -23px; margin-right: -23px;
-            display: flex; align-items: flex-end;
-            justify-content: center; padding-bottom: 8px;
-            color: var(--gd); font-size: 6px;
-        }
-
-        /* State Styles */
-        .key.active-right { background: var(--g) !important; color: #000 !important; transform: translateY(4px); border-bottom-width: 2px; }
-        .key.active-wrong { background: var(--err) !important; color: #fff !important; transform: translateY(4px); border-bottom-width: 2px; }
-        .key.target-hint { box-shadow: inset 0 -15px 20px var(--gm); border-color: var(--g); }
-
-        #controls { padding: 10px; background: #000c02; text-align: center; }
-        .btn { padding: 12px 20px; background: var(--gk); border: 2px solid var(--g); color: var(--g); font-size: 8px; }
+        #controls { padding: 15px; background: #000c02; border-top: 2px solid var(--gm); display: flex; justify-content: center; gap: 20px; }
+        .btn { padding: 10px 15px; background: var(--gk); border: 2px solid var(--g); color: var(--g); font-size: 8px; cursor: pointer; }
+        .btn.active { background: var(--g); color: var(--bg); }
+        
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
+<div id="menu-overlay">
+    <h1 style="color: var(--g); font-size: 18px;">SELECT_MODULE</h1>
+    <div class="menu-grid" id="menu-grid"></div>
+</div>
+
 <div id="hud">
-    <div>LVL:<span id="lvl-num">1</span> <span id="lvl-name">C3_START</span></div>
-    <div>SCORE:<span id="score">0000</span></div>
+    <div id="btn-back" style="cursor:pointer; border:1px solid var(--gm); padding:4px;">[BACK]</div>
+    <div id="lvl-info">---</div>
+    <div id="score">SC:0000</div>
 </div>
 
 <div id="game-world">
-    <div id="target-display">READY</div>
-    <div id="cat-track"><div id="cat">🐈</div></div>
-    <p id="pitch-status" style="font-size: 8px; color: var(--gd);">WAITING FOR MIC...</p>
+    <div id="target-display">--</div>
+    <div id="trail-container"><div id="cat">🐈</div></div>
+    <div id="pitch-status" style="font-size: 8px; color: var(--gm);">IDLE</div>
 </div>
 
-<div id="piano-scroll">
-    <div id="piano">
-        <!-- Octave 3 -->
-        <div class="key white" data-note="C3">C3</div>
-        <div class="key black" data-note="C#3">C#3</div>
-        <div class="key white" data-note="D3">D3</div>
-        <div class="key black" data-note="D#3">D#3</div>
-        <div class="key white" data-note="E3">E3</div>
-        <div class="key white" data-note="F3">F3</div>
-        <div class="key black" data-note="F#3">F#3</div>
-        <div class="key white" data-note="G3">G3</div>
-        <div class="key black" data-note="G#3">G#3</div>
-        <div class="key white" data-note="A3">A3</div>
-        <div class="key black" data-note="A#3">A#3</div>
-        <div class="key white" data-note="B3">B3</div>
-        <!-- Octave 4 -->
-        <div class="key white" data-note="C4">C4</div>
-        <div class="key black" data-note="C#4">C#4</div>
-        <div class="key white" data-note="D4">D4</div>
-        <div class="key black" data-note="D#4">D#4</div>
-        <div class="key white" data-note="E4">E4</div>
-        <div class="key white" data-note="F4">F4</div>
-        <div class="key black" data-note="F#4">F#4</div>
-        <div class="key white" data-note="G4">G4</div>
-        <div class="key black" data-note="G#4">G#4</div>
-        <div class="key white" data-note="A4">A4</div>
-        <div class="key black" data-note="A#4">A#4</div>
-        <div class="key white" data-note="B4">B4</div>
-    </div>
-</div>
+<div id="piano-scroll"><div id="piano"></div></div>
 
 <div id="controls">
-    <button class="btn" id="start-btn">INITIALIZE CORE</button>
+    <button class="btn" id="mic-toggle">ENGAGE_MIC</button>
 </div>
 
 <script>
     const noteStrings = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-    const levels = [
-        { name: "C3_STABILITY", notes: ["C3"] },
-        { name: "LOW_JUMP", notes: ["C3", "G3"] },
-        { name: "TRIAD_3", notes: ["C3", "E3", "G3"] },
-        { name: "OCTAVE_SHIFT", notes: ["C3", "C4"] },
-        { name: "PENTA_MIX", notes: ["C3", "D3", "E3", "G3", "A3", "C4"] },
-        { name: "BLACK_KEYS", notes: ["C#3", "D#3", "F#3"] },
-        { name: "C_MAJOR_FULL", notes: ["C3", "D3", "E3", "F3", "G3", "A3", "B3", "C4"] },
-        { name: "CHROMATIC_MINI", notes: ["B3", "A#3", "A3", "G#3", "G3"] },
-        { name: "JUMP_QUEST", notes: ["C3", "B3", "D3", "A3"] },
-        { name: "MIDDLE_TENSION", notes: ["F3", "F#3", "G3", "G#3"] },
-        { name: "THE_CLIMB", notes: ["C3", "E3", "G3", "B3", "D4", "F4"] },
-        { name: "VOID_GAUNTLET", notes: ["C#3", "D4", "B3", "F3", "A#3", "E4"] }
+    
+    const levelDB = [
+        { name: "C_MAJOR_START", data: ["C3", "D3", "E3", "F3", "G3"] },
+        { name: "G_MAJOR_START", data: ["G3", "A3", "B3", "C4", "D4"] },
+        { name: "PENTA_MIN_A", data: ["A3", "C4", "D4", "E4", "G4"] },
+        { name: "PENTA_MAJ_C", data: ["C3", "D3", "E3", "G3", "A3"] },
+        { name: "HOT_CROSS_BUNS", data: ["E4", "D4", "C4", "E4", "D4", "C4", "C4", "C4", "C4", "C4", "D4", "D4", "D4", "D4", "E4", "D4", "C4"] },
+        { name: "TWINKLE_LITTLE", data: ["C4", "C4", "G4", "G4", "A4", "A4", "G4", "F4", "F4", "E4", "E4", "D4", "D4", "C4"] },
+        { name: "CHORD_C_TRIAD", data: ["C3", "E3", "G3", "C4"] },
+        { name: "CHORD_G_TRIAD", data: ["G3", "B3", "D4", "G4"] },
+        { name: "INTERVALS_3RDS", data: ["C3", "E3", "D3", "F3", "E3", "G3", "F3", "A3"] },
+        { name: "CHROMATIC_RUN", data: ["C4", "C#4", "D4", "D#4", "E4", "F4", "F#4", "G4"] }
     ];
 
-    let currentLvl = 0, targetIdx = 0, score = 0, progress = 0;
-    let audioCtx, analyser, dataArray, active = false;
+    let currentLvl = null, noteIdx = 0, score = 0, progress = 0;
+    let audioCtx, analyser, dataArray, micActive = false;
 
-    const keys = document.querySelectorAll('.key');
-    const cat = document.getElementById('cat');
-    const targetDisplay = document.getElementById('target-display');
-    const statusText = document.getElementById('pitch-status');
+    const menuGrid = document.getElementById('menu-grid');
+    levelDB.forEach((lvl, i) => {
+        const div = document.createElement('div');
+        div.className = 'lvl-card';
+        div.innerHTML = `MOD_${i+1}<br>${lvl.name}`;
+        div.onclick = () => {
+            currentLvl = lvl;
+            noteIdx = 0;
+            progress = 0;
+            document.getElementById('menu-overlay').classList.add('hidden');
+            document.getElementById('lvl-info').innerText = lvl.name;
+            document.getElementById('cat').style.left = "0%";
+            updateTarget();
+        };
+        menuGrid.appendChild(div);
+    });
 
-    async function start() {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const source = audioCtx.createMediaStreamSource(stream);
-        analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 4096; // Higher resolution for lower notes
-        source.connect(analyser);
-        dataArray = new Float32Array(analyser.fftSize);
-        active = true;
-        updateTarget();
-        loop();
+    const piano = document.getElementById('piano');
+    for (let oct = 3; oct <= 4; oct++) {
+        noteStrings.forEach(n => {
+            const key = document.createElement('div');
+            key.className = `key ${n.includes('#') ? 'black' : 'white'}`;
+            key.dataset.note = n + oct;
+            key.innerText = n + oct;
+            piano.appendChild(key);
+        });
+    }
+
+    async function toggleMic() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const source = audioCtx.createMediaStreamSource(stream);
+            analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 4096;
+            source.connect(analyser);
+            dataArray = new Float32Array(analyser.fftSize);
+        }
+        micActive = !micActive;
+        const btn = document.getElementById('mic-toggle');
+        btn.innerText = micActive ? "DISENGAGE" : "ENGAGE_MIC";
+        btn.classList.toggle('active', micActive);
+        if (micActive) loop();
     }
 
     function autoCorrelate(buf, sampleRate) {
         let size = buf.length, rms = 0;
         for (let i=0; i<size; i++) rms += buf[i]*buf[i];
-        if (Math.sqrt(rms/size) < 0.015) return -1;
-
+        if (Math.sqrt(rms/size) < 0.01) return -1;
         let r1 = 0, r2 = size-1, thres = 0.2;
         for (let i=0; i<size/2; i++) if (Math.abs(buf[i])<thres) { r1=i; break; }
         for (let i=1; i<size/2; i++) if (Math.abs(buf[size-i])<thres) { r2=size-i; break; }
         buf = buf.slice(r1, r2); size = buf.length;
-
         let c = new Array(size).fill(0);
-        for (let i=0; i<size; i++)
-            for (let j=0; j<size-i; j++) c[i] += buf[j]*buf[j+i];
-
+        for (let i=0; i<size; i++) for (let j=0; j<size-i; j++) c[i] += buf[j]*buf[j+i];
         let d=0; while (c[d]>c[d+1]) d++;
         let maxval=-1, maxpos=-1;
         for (let i=d; i<size; i++) if (c[i]>maxval) { maxval=c[i]; maxpos=i; }
@@ -193,63 +186,57 @@
     }
 
     function loop() {
+        if (!micActive || !currentLvl) return;
         analyser.getFloatTimeDomainData(dataArray);
         const pitch = autoCorrelate(dataArray, audioCtx.sampleRate);
-        
-        keys.forEach(k => k.classList.remove('active-right', 'active-wrong'));
+        document.querySelectorAll('.key').forEach(k => k.classList.remove('active-right', 'active-wrong'));
 
         if (pitch !== -1) {
             const midi = Math.round(12 * (Math.log2(pitch / 440)) + 69);
-            const noteName = noteStrings[midi % 12];
-            const octave = Math.floor(midi / 12) - 1;
-            const fullNote = noteName + octave;
-            
-            statusText.innerText = `HEARD: ${fullNote}`;
-            const keyEl = document.querySelector(`.key[data-note="${fullNote}"]`);
-            const target = levels[currentLvl].notes[targetIdx];
+            const heard = noteStrings[midi % 12] + (Math.floor(midi / 12) - 1);
+            const target = currentLvl.data[noteIdx];
+            const keyEl = document.querySelector(`.key[data-note="${heard}"]`);
 
-            if (fullNote === target) {
+            if (heard === target) {
                 if (keyEl) keyEl.classList.add('active-right');
-                progress += 2;
-                cat.style.left = progress + "%";
-                if (progress >= 95) winStep();
-            } else {
-                if (keyEl) keyEl.classList.add('active-wrong');
+                progress += 2.5;
+                const total = currentLvl.data.length;
+                const visualPos = ((noteIdx + (progress/100)) / total) * 90;
+                document.getElementById('cat').style.left = visualPos + "%";
+                
+                if (progress >= 100) {
+                    progress = 0;
+                    noteIdx++;
+                    if (noteIdx >= currentLvl.data.length) {
+                        score += 500;
+                        document.getElementById('score').innerText = `SC:${score}`;
+                        alert("LEVEL_COMPLETE");
+                        document.getElementById('menu-overlay').classList.remove('hidden');
+                    } else {
+                        updateTarget();
+                    }
+                }
+            } else if (keyEl) {
+                keyEl.classList.add('active-wrong');
             }
         }
         requestAnimationFrame(loop);
     }
 
-    function winStep() {
-        progress = 0; cat.style.left = "0%";
-        score += 150;
-        document.getElementById('score').innerText = score.toString().padStart(4, '0');
-        targetIdx++;
-        if (targetIdx >= levels[currentLvl].notes.length) {
-            targetIdx = 0;
-            currentLvl = (currentLvl + 1) % levels.length;
-            document.getElementById('lvl-num').innerText = currentLvl + 1;
-            document.getElementById('lvl-name').innerText = levels[currentLvl].name;
-        }
-        updateTarget();
-    }
-
     function updateTarget() {
-        const target = levels[currentLvl].notes[targetIdx];
-        targetDisplay.innerText = target;
-        keys.forEach(k => {
+        const target = currentLvl.data[noteIdx];
+        document.getElementById('target-display').innerText = target;
+        document.querySelectorAll('.key').forEach(k => {
             k.classList.remove('target-hint');
             if (k.dataset.note === target) {
                 k.classList.add('target-hint');
-                k.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                k.scrollIntoView({ behavior: 'smooth', inline: 'center' });
             }
         });
     }
 
-    document.getElementById('start-btn').onclick = function() {
-        this.style.display = 'none';
-        start();
-    };
+    document.getElementById('mic-toggle').onclick = toggleMic;
+    document.getElementById('btn-back').onclick = () => document.getElementById('menu-overlay').classList.remove('hidden');
 </script>
 
 </body>
