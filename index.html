@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MEAWNO | FULL_ARCHIVE</title>
+    <title>MEAWNO</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         :root {
             --g: #00ff41; --gd: #00aa2a; --gk: #003a0e; --gm: #00661a; --bg: #000800;
-            --err: #ff0000; --w: #f0f0f0; --b: #1a1a1a;
+            --err: #ff0000; --w: #fdfdfd; --b: #0a0a0a;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Press Start 2P', cursive; }
@@ -17,64 +17,73 @@
         #menu-overlay {
             position: fixed; inset: 0; background: var(--bg); z-index: 1000;
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
-            overflow-y: auto;
         }
 
         .menu-grid {
             display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
-            width: 100%; max-width: 700px; margin-top: 20px;
+            width: 100%; max-width: 600px; margin-top: 20px;
         }
 
         .lvl-card {
-            border: 2px solid var(--gm); padding: 12px; text-align: center;
-            cursor: pointer; font-size: 7px; line-height: 1.4; transition: 0.1s;
+            border: 2px solid var(--gm); padding: 10px; text-align: center;
+            cursor: pointer; font-size: 7px; transition: 0.1s;
         }
 
-        .lvl-card:hover { border-color: var(--g); background: var(--gk); transform: scale(1.02); }
+        .lvl-card:hover { border-color: var(--g); background: var(--gk); }
 
         #hud {
-            height: 50px; border-bottom: 2px solid var(--gm);
+            height: 40px; border-bottom: 2px solid var(--gm);
             display: flex; align-items: center; padding: 0 20px;
             justify-content: space-between; font-size: 8px;
         }
 
         #game-world {
             flex: 1; display: flex; flex-direction: column; align-items: center;
-            justify-content: center; background: radial-gradient(circle, #001a05 0%, #000800 100%);
+            justify-content: center; background: radial-gradient(circle, #001f06 0%, #000800 100%);
             position: relative;
         }
 
-        #target-display { font-size: 48px; margin-bottom: 15px; color: #fff; text-shadow: 0 0 20px var(--g); }
+        #target-display { font-size: 40px; color: #fff; text-shadow: 0 0 15px var(--g); margin-bottom: 10px; }
         
-        #trail-container {
-            width: 85%; height: 60px; border-bottom: 2px dashed var(--gm);
-            position: relative; margin-bottom: 20px; display: flex; align-items: flex-end;
+        #track { width: 80%; height: 40px; border-bottom: 1px solid var(--gm); position: relative; margin-bottom: 20px; }
+        #cat { position: absolute; bottom: 5px; left: 0; font-size: 24px; transform: scaleX(-1); transition: left 0.2s; }
+
+        /* Real Piano Proportions */
+        #piano-scroll { width: 100%; overflow-x: auto; background: #050505; border-top: 4px solid var(--gm); padding: 20px 0; }
+        #piano { display: flex; position: relative; height: 180px; width: fit-content; margin: 0 auto; padding: 0 20px; }
+        
+        .key { position: relative; cursor: pointer; transition: background 0.1s; }
+        
+        .white {
+            width: 35px; height: 160px; background: var(--w);
+            border: 1px solid #ccc; border-radius: 0 0 4px 4px;
+            z-index: 1; display: flex; align-items: flex-end; justify-content: center;
+            padding-bottom: 10px; font-size: 6px; color: #888;
         }
 
-        #cat { position: absolute; bottom: 8px; left: 0; font-size: 30px; transform: scaleX(-1); transition: left 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 5; }
+        .black {
+            width: 22px; height: 100px; background: var(--b);
+            margin-left: -11px; margin-right: -11px; z-index: 2;
+            border: 1px solid #000; border-radius: 0 0 3px 3px;
+            display: flex; align-items: flex-end; justify-content: center;
+            padding-bottom: 8px; font-size: 5px; color: var(--gm);
+        }
 
-        #piano-scroll { width: 100%; overflow-x: auto; background: #000; border-top: 4px solid var(--gm); padding: 15px 0; }
-        #piano { display: flex; position: relative; height: 160px; width: 1200px; margin: 0 auto; }
-        .key { position: relative; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; font-size: 7px; }
-        .key.white { width: 80px; height: 100%; background: var(--w); border: 1px solid #999; border-radius: 0 0 5px 5px; color: #333; z-index: 1; }
-        .key.black { width: 44px; height: 60%; background: var(--b); border: 1px solid #000; border-radius: 0 0 3px 3px; z-index: 2; margin-left: -22px; margin-right: -22px; color: var(--gd); }
-
-        .key.active-right { background: var(--g) !important; color: #000 !important; box-shadow: 0 0 30px var(--g); z-index: 3; }
-        .key.active-wrong { background: var(--err) !important; color: #fff !important; z-index: 3; }
+        .key.active-right { background: var(--g) !important; color: #000 !important; box-shadow: 0 0 20px var(--g); }
+        .key.active-wrong { background: var(--err) !important; color: #fff !important; }
         
         .key.target-hint { 
-            border: 3px solid #fff; 
-            animation: pulse 1.2s infinite;
-            z-index: 4;
+            border: 2px solid #fff; 
+            box-shadow: inset 0 -15px 20px var(--gm);
+            animation: pulse 1s infinite;
         }
 
         @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 5px var(--g); }
-            50% { box-shadow: 0 0 25px var(--g); }
+            50% { filter: brightness(1.3); }
         }
 
-        #controls { padding: 15px; background: #000c02; border-top: 2px solid var(--gm); display: flex; justify-content: center; gap: 20px; }
-        .btn { padding: 10px 15px; background: var(--gk); border: 2px solid var(--g); color: var(--g); font-size: 8px; cursor: pointer; }
+        #controls { padding: 15px; background: #000; border-top: 2px solid var(--gm); display: flex; justify-content: center; }
+        .btn { padding: 10px 20px; background: var(--gk); border: 2px solid var(--g); color: var(--g); font-size: 8px; cursor: pointer; }
         .btn.active { background: var(--g); color: var(--bg); }
         
         .hidden { display: none !important; }
@@ -83,20 +92,20 @@
 <body>
 
 <div id="menu-overlay">
-    <h1 style="color: var(--g); font-size: 18px;">SELECT_MODULE</h1>
+    <h1 style="color: var(--g); font-size: 14px; margin-bottom: 20px;">RANGE: C3_TO_B5</h1>
     <div class="menu-grid" id="menu-grid"></div>
 </div>
 
 <div id="hud">
-    <div id="btn-back" style="cursor:pointer; border:1px solid var(--gm); padding:4px;">[BACK]</div>
-    <div id="lvl-info">---</div>
+    <div id="btn-back" style="cursor:pointer;">[EXIT]</div>
+    <div id="lvl-info">IDLE</div>
     <div id="score">SC:0000</div>
 </div>
 
 <div id="game-world">
     <div id="target-display">--</div>
-    <div id="trail-container"><div id="cat">🐈</div></div>
-    <div id="pitch-status" style="font-size: 8px; color: var(--gm);">IDLE</div>
+    <div id="track"><div id="cat">🐈</div></div>
+    <div id="pitch-status" style="font-size: 7px; color: var(--gm);">SIGNAL_WAIT</div>
 </div>
 
 <div id="piano-scroll"><div id="piano"></div></div>
@@ -107,21 +116,15 @@
 
 <script>
     const noteStrings = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-    
     const levelDB = [
-        { name: "C_MAJOR_START", data: ["C3", "D3", "E3", "F3", "G3"] },
-        { name: "G_MAJOR_START", data: ["G3", "A3", "B3", "C4", "D4"] },
-        { name: "PENTA_MIN_A", data: ["A3", "C4", "D4", "E4", "G4"] },
-        { name: "PENTA_MAJ_C", data: ["C3", "D3", "E3", "G3", "A3"] },
-        { name: "HOT_CROSS_BUNS", data: ["E4", "D4", "C4", "E4", "D4", "C4", "C4", "C4", "C4", "C4", "D4", "D4", "D4", "D4", "E4", "D4", "C4"] },
-        { name: "TWINKLE_LITTLE", data: ["C4", "C4", "G4", "G4", "A4", "A4", "G4", "F4", "F4", "E4", "E4", "D4", "D4", "C4"] },
-        { name: "CHORD_C_TRIAD", data: ["C3", "E3", "G3", "C4"] },
-        { name: "CHORD_G_TRIAD", data: ["G3", "B3", "D4", "G4"] },
-        { name: "INTERVALS_3RDS", data: ["C3", "E3", "D3", "F3", "E3", "G3", "F3", "A3"] },
-        { name: "CHROMATIC_RUN", data: ["C4", "C#4", "D4", "D#4", "E4", "F4", "F#4", "G4"] }
+        { name: "LOW_RANGE_C3", data: ["C3", "E3", "G3"] },
+        { name: "MID_RANGE_C4", data: ["C4", "E4", "G4"] },
+        { name: "HIGH_RANGE_C5", data: ["C5", "E5", "G5"] },
+        { name: "TWINKLE_FULL", data: ["C4", "C4", "G4", "G4", "A4", "A4", "G4", "F4", "F4", "E4", "E4", "D4", "D4", "C4"] },
+        { name: "OCTAVE_JUMP", data: ["C3", "C4", "C5", "C4", "C3"] }
     ];
 
-    let currentLvl = null, noteIdx = 0, score = 0, progress = 0;
+    let currentLvl = null, noteIdx = 0, progress = 0;
     let audioCtx, analyser, dataArray, micActive = false;
 
     const menuGrid = document.getElementById('menu-grid');
@@ -142,7 +145,8 @@
     });
 
     const piano = document.getElementById('piano');
-    for (let oct = 3; oct <= 4; oct++) {
+    // Range C3 to B5
+    for (let oct = 3; oct <= 5; oct++) {
         noteStrings.forEach(n => {
             const key = document.createElement('div');
             key.className = `key ${n.includes('#') ? 'black' : 'white'}`;
@@ -163,16 +167,15 @@
             dataArray = new Float32Array(analyser.fftSize);
         }
         micActive = !micActive;
-        const btn = document.getElementById('mic-toggle');
-        btn.innerText = micActive ? "DISENGAGE" : "ENGAGE_MIC";
-        btn.classList.toggle('active', micActive);
+        document.getElementById('mic-toggle').innerText = micActive ? "DISENGAGE" : "ENGAGE_MIC";
+        document.getElementById('mic-toggle').classList.toggle('active', micActive);
         if (micActive) loop();
     }
 
     function autoCorrelate(buf, sampleRate) {
         let size = buf.length, rms = 0;
         for (let i=0; i<size; i++) rms += buf[i]*buf[i];
-        if (Math.sqrt(rms/size) < 0.01) return -1;
+        if (Math.sqrt(rms/size) < 0.012) return -1;
         let r1 = 0, r2 = size-1, thres = 0.2;
         for (let i=0; i<size/2; i++) if (Math.abs(buf[i])<thres) { r1=i; break; }
         for (let i=1; i<size/2; i++) if (Math.abs(buf[size-i])<thres) { r2=size-i; break; }
@@ -199,26 +202,18 @@
 
             if (heard === target) {
                 if (keyEl) keyEl.classList.add('active-right');
-                progress += 2.5;
-                const total = currentLvl.data.length;
-                const visualPos = ((noteIdx + (progress/100)) / total) * 90;
+                progress += 3;
+                const visualPos = ((noteIdx + (progress/100)) / currentLvl.data.length) * 92;
                 document.getElementById('cat').style.left = visualPos + "%";
-                
                 if (progress >= 100) {
                     progress = 0;
                     noteIdx++;
                     if (noteIdx >= currentLvl.data.length) {
-                        score += 500;
-                        document.getElementById('score').innerText = `SC:${score}`;
-                        alert("LEVEL_COMPLETE");
+                        alert("STABILIZED");
                         document.getElementById('menu-overlay').classList.remove('hidden');
-                    } else {
-                        updateTarget();
-                    }
+                    } else { updateTarget(); }
                 }
-            } else if (keyEl) {
-                keyEl.classList.add('active-wrong');
-            }
+            } else if (keyEl) { keyEl.classList.add('active-wrong'); }
         }
         requestAnimationFrame(loop);
     }
