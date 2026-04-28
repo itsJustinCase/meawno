@@ -3,7 +3,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>MEAWNO</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
@@ -16,149 +19,174 @@
 –black: #000800;
 }
 
-- { box-sizing: border-box; margin: 0; padding: 0; }
+- { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-body {
+html, body {
+width: 100%; height: 100%;
 background: var(–black);
 color: var(–green);
 font-family: ‘Press Start 2P’, monospace;
+overflow: hidden;
+touch-action: none;
+}
+
+body {
 display: flex;
 flex-direction: column;
 align-items: center;
 justify-content: center;
-min-height: 100vh;
-overflow: hidden;
 }
 
+/* CRT scanlines */
 body::before {
 content: ‘’;
-position: fixed;
-inset: 0;
-background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 4px);
-pointer-events: none;
-z-index: 9999;
+position: fixed; inset: 0;
+background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px);
+pointer-events: none; z-index: 9999;
 }
 body::after {
 content: ‘’;
-position: fixed;
-inset: 0;
-background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.7) 100%);
-pointer-events: none;
-z-index: 9998;
+position: fixed; inset: 0;
+background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.65) 100%);
+pointer-events: none; z-index: 9998;
 }
 
+/* ── WRAPPER ── */
 #game-wrapper {
-width: min(920px, 98vw);
-border: 3px solid var(–green);
-box-shadow: 0 0 30px var(–green), inset 0 0 30px rgba(0,255,65,0.05);
+width: 100%;
+max-width: 920px;
+height: 100vh;
+height: 100dvh;
+border: 0;
 background: var(–black);
 position: relative;
 overflow: hidden;
+display: flex;
+flex-direction: column;
+}
+@media (min-width: 600px) {
+#game-wrapper {
+width: min(920px, 98vw);
+height: auto;
+border: 3px solid var(–green);
+box-shadow: 0 0 30px var(–green), inset 0 0 30px rgba(0,255,65,0.04);
+}
 }
 
-/* HUD */
+/* ── HUD ── */
 #hud {
 display: flex;
 justify-content: space-between;
 align-items: center;
-padding: 7px 14px;
+padding: 6px 10px;
 border-bottom: 2px solid var(–green-mid);
 font-size: 7px;
 flex-wrap: wrap;
-gap: 5px;
+gap: 4px;
+flex-shrink: 0;
 }
-#hud-left { display: flex; gap: 16px; }
-#hud-right { display: flex; align-items: center; gap: 8px; }
+#hud-left { display: flex; gap: 12px; align-items: center; }
+#hud-right { display: flex; align-items: center; gap: 7px; }
 .hud-val { color: var(–green); text-shadow: 0 0 8px var(–green); }
 
 .toggle-btn {
 font-family: ‘Press Start 2P’, monospace;
 font-size: 6px;
-background: var(–black);
-color: var(–green-dim);
+background: var(–black); color: var(–green-dim);
 border: 1px solid var(–green-dim);
-padding: 4px 6px;
-cursor: pointer;
+padding: 5px 7px; cursor: pointer;
+touch-action: manipulation;
 }
-.toggle-btn:hover, .toggle-btn.active {
-background: var(–green-dark);
-color: var(–green);
-border-color: var(–green);
-box-shadow: 0 0 6px var(–green);
+.toggle-btn.active {
+background: var(–green-dark); color: var(–green);
+border-color: var(–green); box-shadow: 0 0 6px var(–green);
 }
 
-/* STAGE */
+/* ── STAGE ── */
 #stage {
 position: relative;
-height: 210px;
+flex: 1 1 auto;
+min-height: 0;
 overflow: hidden;
 background: var(–black);
 border-bottom: 2px solid var(–green-mid);
 }
+@media (max-height: 600px) {
+#stage { min-height: 120px; }
+}
+
 #stage-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 #ground {
-position: absolute;
-bottom: 0; width: 100%; height: 36px;
-background: var(–green-dark);
-border-top: 3px solid var(–green-mid);
+position: absolute; bottom: 0; width: 100%; height: 32px;
+background: var(–green-dark); border-top: 3px solid var(–green-mid);
 }
 
 #kitty {
-position: absolute;
-bottom: 36px;
-left: 60px;
-width: 40px; height: 40px;
+position: absolute; bottom: 32px; left: 5%;
+width: 36px; height: 36px;
 transition: left 0.5s cubic-bezier(.4,1.5,.6,1);
 }
 #kitty.jump { animation: kitty-jump 0.4s ease; }
 @keyframes kitty-jump {
-0%,100%{transform:translateY(0);}
-50%{transform:translateY(-28px);}
+0%,100%{transform:translateY(0);} 50%{transform:translateY(-24px);}
 }
 
 #castle {
-position: absolute; right: 18px; bottom: 36px;
-font-size: 34px; filter: drop-shadow(0 0 8px var(–green)); opacity: 0.85;
+position: absolute; right: 14px; bottom: 32px;
+font-size: 30px; filter: drop-shadow(0 0 8px var(–green)); opacity: 0.85;
 }
 
 #stage-hud {
-position: absolute; top: 10px; left: 0; right: 0;
+position: absolute; top: 8px; left: 0; right: 0;
 text-align: center; pointer-events: none;
 }
-#level-name { font-size: 7px; color: var(–green-dim); margin-bottom: 8px; letter-spacing: 1px; }
-#melody-display { font-size: 12px; color: var(–green); text-shadow: 0 0 10px var(–green); letter-spacing: 2px; }
+#level-name { font-size: 6px; color: var(–green-dim); margin-bottom: 6px; letter-spacing: 1px; }
+#melody-display { font-size: 11px; color: var(–green); text-shadow: 0 0 10px var(–green); letter-spacing: 1px; line-height: 1.8; }
 #melody-display span {
-display: inline-block; margin: 0 3px; padding: 2px 5px;
+display: inline-block; margin: 0 2px; padding: 2px 4px;
 border: 2px solid var(–green-dim); transition: all 0.12s;
+font-size: 9px;
 }
 #melody-display span.done { color: var(–green-dark); border-color: var(–green-dark); text-shadow: none; }
 #melody-display span.active { color: var(–black); background: var(–green); border-color: var(–green); box-shadow: 0 0 14px var(–green); }
-#feedback { font-size: 10px; margin-top: 8px; height: 16px; letter-spacing: 1px; }
+#feedback { font-size: 9px; margin-top: 6px; height: 14px; letter-spacing: 1px; }
 #feedback.good { color: var(–green); text-shadow: 0 0 10px var(–green); }
 #feedback.bad  { color: #ff3333; text-shadow: 0 0 10px #ff3333; }
 
-#progress-stars { position: absolute; top: 8px; right: 10px; display: flex; gap: 3px; }
+#progress-stars { position: absolute; top: 6px; right: 8px; display: flex; gap: 2px; flex-wrap: wrap; justify-content: flex-end; max-width: 80px; }
 .star { font-size: 7px; color: var(–green-dark); }
 .star.lit { color: var(–green); text-shadow: 0 0 5px var(–green); }
 
-/* PIANO */
-#piano-area { padding: 10px 6px 14px; background: #000c02; }
-#piano-scroll { overflow-x: auto; overflow-y: hidden; }
-#piano-container { position: relative; height: 115px; user-select: none; }
+/* ── PIANO ── */
+#piano-area {
+flex-shrink: 0;
+padding: 8px 0 10px;
+background: #000c02;
+border-top: 1px solid var(–green-dark);
+}
+#piano-scroll {
+overflow-x: auto; overflow-y: hidden;
+-webkit-overflow-scrolling: touch;
+scrollbar-width: none;
+touch-action: pan-x;
+padding: 0 8px;
+}
+#piano-scroll::-webkit-scrollbar { display: none; }
+#piano-container { position: relative; height: 110px; user-select: none; }
 
 .white-key {
 position: absolute; bottom: 0;
-width: 34px; height: 115px;
+height: 110px;
 background: linear-gradient(180deg, #003a0e 0%, #001505 100%);
 border: 1.5px solid var(–green-mid);
 border-radius: 0 0 3px 3px;
-cursor: pointer;
+cursor: pointer; touch-action: manipulation;
 display: flex; flex-direction: column;
 justify-content: flex-end; align-items: center;
-padding-bottom: 5px;
-transition: background 0.07s, box-shadow 0.07s;
+padding-bottom: 4px;
+transition: background 0.06s, box-shadow 0.06s;
 }
-.white-key:hover, .white-key.pressed {
+.white-key.pressed, .white-key.active-touch {
 background: linear-gradient(180deg, #006918 0%, #003a0e 100%);
 box-shadow: 0 0 16px var(–green), inset 0 0 8px rgba(0,255,65,0.25);
 border-color: var(–green);
@@ -166,18 +194,18 @@ border-color: var(–green);
 .white-key.target { animation: pulse-key 0.55s infinite alternate; border-color: var(–green) !important; }
 
 .black-key {
-position: absolute; bottom: 40px;
-width: 22px; height: 68px;
+position: absolute; bottom: 38px;
+height: 66px;
 background: linear-gradient(180deg, #001a06 0%, #000a02 100%);
 border: 1.5px solid var(–green-mid);
 border-radius: 0 0 2px 2px;
-cursor: pointer; z-index: 2;
+cursor: pointer; z-index: 2; touch-action: manipulation;
 display: flex; flex-direction: column;
 justify-content: flex-end; align-items: center;
-padding-bottom: 4px;
-transition: background 0.07s, box-shadow 0.07s;
+padding-bottom: 3px;
+transition: background 0.06s, box-shadow 0.06s;
 }
-.black-key:hover, .black-key.pressed {
+.black-key.pressed, .black-key.active-touch {
 background: linear-gradient(180deg, #004d15 0%, #002008 100%);
 box-shadow: 0 0 12px var(–green), inset 0 0 6px rgba(0,255,65,0.3);
 border-color: var(–green);
@@ -191,72 +219,91 @@ to   { box-shadow: 0 0 22px var(–green), inset 0 0 12px rgba(0,255,65,0.35); }
 
 .key-label {
 font-family: ‘Press Start 2P’, monospace;
-font-size: 5px; color: var(–green-dim);
-pointer-events: none; text-align: center;
-line-height: 1.4; display: none;
+font-size: 4.5px; color: var(–green-dim);
+pointer-events: none; text-align: center; line-height: 1.4; display: none;
 }
 .show-labels .key-label { display: block; }
-.black-key .key-label { font-size: 4px; }
+.black-key .key-label { font-size: 3.5px; }
 
-/* OVERLAYS */
+/* ── OVERLAYS ── */
 .screen-overlay {
 position: absolute; inset: 0;
-background: rgba(0,8,2,0.96);
+background: rgba(0,8,2,0.97);
 display: flex; flex-direction: column;
 align-items: center; justify-content: center;
-gap: 16px; z-index: 100;
-text-align: center; padding: 20px;
+gap: 14px; z-index: 100;
+text-align: center; padding: 16px;
+overflow-y: auto;
 }
 .screen-overlay h1 {
-font-size: 26px; color: var(–green);
+font-size: clamp(16px, 5vw, 26px); color: var(–green);
 text-shadow: 0 0 20px var(–green), 0 0 50px rgba(0,255,65,0.3);
-animation: flicker 4s infinite; letter-spacing: 5px;
+animation: flicker 4s infinite; letter-spacing: 4px;
 }
-.screen-overlay h2 { font-size: 12px; color: var(–green); margin-bottom: 2px; }
-.screen-overlay p  { font-size: 6px; color: var(–green-dim); line-height: 2.2; max-width: 520px; }
+.screen-overlay h2 { font-size: clamp(8px, 3vw, 12px); color: var(–green); margin-bottom: 2px; }
+.screen-overlay p  { font-size: clamp(5px, 1.5vw, 6px); color: var(–green-dim); line-height: 2.2; max-width: 500px; }
 @keyframes flicker {
 0%,93%,100%{opacity:1;} 94%{opacity:0.6;} 95%{opacity:1;} 97%{opacity:0.4;} 98%{opacity:1;}
 }
 
 .pixel-btn {
 font-family: ‘Press Start 2P’, monospace;
-font-size: 8px;
+font-size: clamp(7px, 2vw, 9px);
 background: var(–black); color: var(–green);
 border: 2px solid var(–green);
-padding: 9px 18px; cursor: pointer;
+padding: 10px 18px; cursor: pointer;
 box-shadow: 0 0 10px rgba(0,255,65,0.25);
-letter-spacing: 1px; transition: all 0.1s;
+letter-spacing: 1px; transition: background 0.1s, box-shadow 0.1s;
+touch-action: manipulation; min-width: 80px;
 }
-.pixel-btn:hover {
-background: var(–green-dark);
-box-shadow: 0 0 20px var(–green);
-transform: translateY(-1px);
-}
+.pixel-btn:active { background: var(–green-dark); box-shadow: 0 0 20px var(–green); }
 
 .level-select-grid {
 display: grid;
-grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-gap: 7px; width: 100%; max-width: 560px;
+grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+gap: 6px; width: 100%; max-width: 540px;
 }
 .level-btn {
 font-family: ‘Press Start 2P’, monospace; font-size: 5px;
 background: var(–black); color: var(–green-dim);
 border: 1px solid var(–green-mid);
-padding: 8px 5px; cursor: pointer;
-text-align: center; line-height: 2; transition: all 0.1s;
+padding: 9px 4px; cursor: pointer;
+text-align: center; line-height: 2;
+touch-action: manipulation;
 }
-.level-btn:hover { color: var(–green); border-color: var(–green); background: var(–green-dark); box-shadow: 0 0 8px var(–green); }
-.level-btn .lb-num { font-size: 11px; display: block; margin-bottom: 4px; }
+.level-btn:active { color: var(–green); border-color: var(–green); background: var(–green-dark); }
+.level-btn .lb-num { font-size: 11px; display: block; margin-bottom: 3px; }
 
 #mic-status {
 font-size: 5px; color: var(–green-dim);
-padding: 3px 7px; border: 1px solid var(–green-dark); cursor: pointer;
+padding: 5px 8px; border: 1px solid var(–green-dark);
+cursor: pointer; touch-action: manipulation;
 }
 #mic-status.active { color: var(–green); border-color: var(–green); box-shadow: 0 0 6px var(–green); }
+#mic-status.listening { color: #ffee00; border-color: #ffee00; box-shadow: 0 0 8px #ffee00; animation: mic-pulse 0.8s infinite alternate; }
+@keyframes mic-pulse { from{opacity:1;} to{opacity:0.5;} }
+
+/* ── MIC MODAL ── */
+#mic-modal {
+position: fixed; inset: 0;
+background: rgba(0,8,2,0.97);
+display: none; flex-direction: column;
+align-items: center; justify-content: center;
+gap: 16px; z-index: 200;
+text-align: center; padding: 24px;
+}
+#mic-modal.open { display: flex; }
+#mic-modal h2 { font-size: 13px; color: var(–green); }
+#mic-modal p { font-size: 6px; color: var(–green-dim); line-height: 2.4; max-width: 340px; }
+#mic-level-bar {
+width: 200px; height: 12px;
+border: 1px solid var(–green-mid); position: relative; overflow: hidden;
+}
+#mic-level-fill { height: 100%; width: 0%; background: var(–green); transition: width 0.08s; }
 
 #kbd-hint {
-position: absolute; bottom: 5px; right: 10px;
-font-size: 5px; color: #003a0e; pointer-events: none;
+position: absolute; bottom: 3px; right: 8px;
+font-size: 4px; color: #002a08; pointer-events: none;
 }
 </style>
 
@@ -265,32 +312,31 @@ font-size: 5px; color: #003a0e; pointer-events: none;
 
 <div id="game-wrapper">
 
-  <!-- TITLE -->
+  <!-- ── TITLE ── -->
 
   <div class="screen-overlay" id="title-screen">
     <h1>MEAWNO</h1>
     <p>HELP THE KITTY REACH THE CASTLE<br>BY PLAYING THE RIGHT NOTES!</p>
-    <p style="font-size:5px; color:#004d10;">♦ RANGE: C3 TO B4 ♦ 10 LEVELS ♦</p>
-    <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
+    <p style="font-size:5px; color:#004d10;">♦ C3 TO B4 · 10 LEVELS ♦</p>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
       <button class="pixel-btn" onclick="showLevelSelect()">▶ PLAY</button>
-      <button class="pixel-btn" id="mic-btn" onclick="startMic()">🎤 MIC</button>
+      <button class="pixel-btn" onclick="openMicModal()">🎤 USE MIC</button>
     </div>
-    <p style="font-size:5px; color:#004010; margin-top:-6px;">CLICK PIANO KEYS OR SING/PLAY INTO YOUR MICROPHONE</p>
-    <p style="font-size:5px; color:#003010;">KEYBOARD: A-J = C3-B3 · K-; = C4-E4 · W/E/T/Y/U = SHARPS</p>
+    <p style="font-size:5px; color:#003a0e;">TAP PIANO KEYS OR SING INTO YOUR MICROPHONE</p>
   </div>
 
-  <!-- LEVEL SELECT -->
+  <!-- ── LEVEL SELECT ── -->
 
   <div class="screen-overlay" id="level-screen" style="display:none">
     <h2>— SELECT LEVEL —</h2>
     <div class="level-select-grid" id="level-grid"></div>
-    <button class="pixel-btn" onclick="showTitle()" style="font-size:6px; padding:7px 14px;">◀ BACK</button>
+    <button class="pixel-btn" onclick="showTitle()" style="font-size:6px; padding:8px 14px;">◀ BACK</button>
   </div>
 
-  <!-- WIN -->
+  <!-- ── WIN ── -->
 
   <div class="screen-overlay" id="win-screen" style="display:none">
-    <h1 style="font-size:18px;">LEVEL CLEAR!</h1>
+    <h1 style="font-size:clamp(14px,4vw,20px);">LEVEL CLEAR!</h1>
     <div id="win-stars" style="font-size:22px; letter-spacing:8px; text-shadow:0 0 10px var(--green);"></div>
     <p id="win-msg" style="font-size:7px;"></p>
     <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
@@ -300,10 +346,10 @@ font-size: 5px; color: #003a0e; pointer-events: none;
     </div>
   </div>
 
-  <!-- GAME OVER -->
+  <!-- ── GAME OVER ── -->
 
   <div class="screen-overlay" id="gameover-screen" style="display:none">
-    <h1 style="font-size:16px; color:#ff3333; text-shadow:0 0 20px #ff3333;">GAME OVER</h1>
+    <h1 style="font-size:clamp(12px,4vw,18px); color:#ff3333; text-shadow:0 0 20px #ff3333;">GAME OVER</h1>
     <p id="gameover-msg" style="font-size:7px;"></p>
     <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
       <button class="pixel-btn" onclick="retryLevel()">↺ TRY AGAIN</button>
@@ -311,7 +357,7 @@ font-size: 5px; color: #003a0e; pointer-events: none;
     </div>
   </div>
 
-  <!-- HUD -->
+  <!-- ── HUD ── -->
 
   <div id="hud">
     <div id="hud-left">
@@ -320,21 +366,20 @@ font-size: 5px; color: #003a0e; pointer-events: none;
       <span>LIVES:<span class="hud-val" id="hud-lives">♥♥♥</span></span>
     </div>
     <div id="hud-right">
-      <span id="mic-status" onclick="startMic()">🎤 OFF</span>
+      <span id="mic-status" onclick="openMicModal()">🎤 OFF</span>
       <button class="toggle-btn" id="label-toggle" onclick="toggleLabels()">NOTES: OFF</button>
     </div>
   </div>
 
-  <!-- STAGE -->
+  <!-- ── STAGE ── -->
 
   <div id="stage">
     <canvas id="stage-canvas"></canvas>
     <div id="ground"></div>
 
 ```
-<!-- Pixel kitty SVG -->
 <div id="kitty">
-  <svg id="kitty-svg" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" width="40" height="40" style="image-rendering:pixelated">
+  <svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" width="36" height="36" style="image-rendering:pixelated">
     <rect x="2" y="4" width="6" height="5" fill="#00cc33"/>
     <rect x="2" y="1" width="6" height="5" fill="#00cc33"/>
     <rect x="2" y="0" width="2" height="2" fill="#00cc33"/>
@@ -363,12 +408,12 @@ font-size: 5px; color: #003a0e; pointer-events: none;
   <div id="feedback"></div>
 </div>
 <div id="progress-stars"></div>
-<div id="kbd-hint">KEYBOARD: A-J · K-; · W E T Y U = SHARPS</div>
+<div id="kbd-hint">A-J: C3–B3 · K-;: C4–E4 · W E T Y U: SHARPS</div>
 ```
 
   </div>
 
-  <!-- PIANO -->
+  <!-- ── PIANO ── -->
 
   <div id="piano-area">
     <div id="piano-scroll">
@@ -378,53 +423,66 @@ font-size: 5px; color: #003a0e; pointer-events: none;
 
 </div>
 
+<!-- ── MIC MODAL ── -->
+
+<div id="mic-modal">
+  <h2>🎤 MICROPHONE</h2>
+  <p>USE YOUR DEVICE MIC TO PLAY!<br>SING, HUM, OR PLAY AN INSTRUMENT.<br>YOUR BROWSER WILL ASK FOR PERMISSION.</p>
+  <div id="mic-level-bar"><div id="mic-level-fill"></div></div>
+  <p id="mic-modal-status" style="font-size:6px; color:var(--green);">PRESS ENABLE TO START</p>
+  <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+    <button class="pixel-btn" id="mic-enable-btn" onclick="startMic()">ENABLE MIC</button>
+    <button class="pixel-btn" onclick="closeMicModal()">CLOSE</button>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════════════
-//  MEAWNO — Core
+//  MEAWNO — Piano Cat Adventure
 // ═══════════════════════════════════════════════════
 
 const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 const NOTES_RANGE = [];
-for (let oct = 3; oct <= 4; oct++)
-  for (let n of NOTE_NAMES) NOTES_RANGE.push(n + oct);
+for (let oct=3; oct<=4; oct++)
+  for (let n of NOTE_NAMES) NOTES_RANGE.push(n+oct);
 
 function noteFreq(note) {
-  const name = note.slice(0,-1), oct = +note.slice(-1);
-  const idx = NOTE_NAMES.indexOf(name);
-  return 440 * Math.pow(2, (idx + (oct - 4) * 12 - 9) / 12);
+  const name=note.slice(0,-1), oct=+note.slice(-1);
+  const idx=NOTE_NAMES.indexOf(name);
+  return 440 * Math.pow(2, (idx + (oct-4)*12 - 9) / 12);
 }
 
-// ── Levels ───────────────────────────────────────
+// ── Levels ───────────────────────────────────────────────────────
 const LEVELS = [
-  { id:1, name:"FIRST STEPS",   desc:"C D E only",
-    notes:["C3","D3","E3","C4","D4","E4"], seqLen:4, lives:5, total:5 },
-  { id:2, name:"PENTATONIC",    desc:"C major pentatonic",
-    notes:["C3","D3","E3","G3","A3","C4","D4","E4","G4","A4"], seqLen:5, lives:5, total:6 },
-  { id:3, name:"LEFT HAND",     desc:"C3–B3 octave only",
-    notes:["C3","D3","E3","F3","G3","A3","B3"], seqLen:5, lives:4, total:7 },
-  { id:4, name:"RIGHT HAND",    desc:"C4–B4 octave only",
-    notes:["C4","D4","E4","F4","G4","A4","B4"], seqLen:5, lives:4, total:7 },
-  { id:5, name:"BOTH HANDS",    desc:"All naturals C3–B4",
-    notes:["C3","D3","E3","F3","G3","A3","B3","C4","D4","E4","F4","G4","A4","B4"], seqLen:6, lives:4, total:8 },
-  { id:6, name:"BLACK KEYS",    desc:"All 24 notes incl. sharps",
-    notes: NOTES_RANGE, seqLen:6, lives:4, total:8 },
-  { id:7, name:"MAJOR CHORDS",  desc:"Play all 3 notes together",
+  { id:1, name:"FIRST STEPS",  desc:"C D E only",
+    notes:["C3","D3","E3","C4","D4","E4"], lives:5, total:5 },
+  { id:2, name:"PENTATONIC",   desc:"C major pentatonic",
+    notes:["C3","D3","E3","G3","A3","C4","D4","E4","G4","A4"], lives:5, total:6 },
+  { id:3, name:"LEFT HAND",    desc:"C3–B3 only",
+    notes:["C3","D3","E3","F3","G3","A3","B3"], lives:4, total:7 },
+  { id:4, name:"RIGHT HAND",   desc:"C4–B4 only",
+    notes:["C4","D4","E4","F4","G4","A4","B4"], lives:4, total:7 },
+  { id:5, name:"BOTH HANDS",   desc:"All naturals C3–B4",
+    notes:["C3","D3","E3","F3","G3","A3","B3","C4","D4","E4","F4","G4","A4","B4"], lives:4, total:8 },
+  { id:6, name:"BLACK KEYS",   desc:"Full chromatic C3–B4",
+    notes:NOTES_RANGE, lives:4, total:8 },
+  { id:7, name:"MAJOR CHORDS", desc:"Play all 3 notes",
     chords:true,
     sequences:[["C3","E3","G3"],["F3","A3","C4"],["G3","B3","D4"],
                ["A3","C4","E4"],["D3","F#3","A3"],["E3","G#3","B3"]],
     lives:3, total:5 },
-  { id:8, name:"MINOR CHORDS",  desc:"Minor triads",
+  { id:8, name:"MINOR CHORDS", desc:"Minor triads",
     chords:true,
     sequences:[["A3","C4","E4"],["D3","F3","A3"],["E3","G3","B3"],
                ["B3","D4","F#4"],["G3","A#3","D4"],["C3","D#3","G3"]],
     lives:3, total:5 },
-  { id:9, name:"CHROMATIC",     desc:"All 24 notes, long sequences",
-    notes: NOTES_RANGE, seqLen:8, lives:3, total:10 },
-  { id:10, name:"MASTER CLASS", desc:"Chords & notes mixed",
+  { id:9, name:"CHROMATIC",    desc:"All 24 notes",
+    notes:NOTES_RANGE, lives:3, total:10 },
+  { id:10, name:"MASTER CLASS",desc:"Chords + notes mixed",
     mixed:true, lives:3, total:12 }
 ];
 
-// ── State ────────────────────────────────────────
+// ── State ─────────────────────────────────────────────────────────
 let state = {
   screen:'title', level:null,
   sequence:[], currentIdx:0,
@@ -434,111 +492,287 @@ let state = {
   chordHit:[], wrongLocked:false
 };
 
-let audioCtx=null, analyser=null, pitchRAF=null;
+let audioCtx=null, analyser=null, pitchRAF=null, micStream=null;
+let micLevelRAF=null;
 
-// ── Piano build ──────────────────────────────────
+// ── Piano layout ──────────────────────────────────────────────────
 const WHITE_ORDER = ['C','D','E','F','G','A','B'];
-const BLACK_POS   = {'C#':0.55,'D#':1.55,'F#':3.55,'G#':4.55,'A#':5.55};
-const W=34, GAP=1, STRIDE=W+GAP;
+const BLACK_SLOTS = {'C#':0,'D#':1,'F#':3,'G#':4,'A#':5}; // slot in white group
+
+// Responsive key width
+function keyWidth() {
+  const vw = window.innerWidth;
+  // 14 white keys per octave × 2 octaves = 28
+  // Try to fit as many as possible, min 28px, max 38px
+  const fit = Math.floor((vw - 16) / 28);
+  return Math.min(38, Math.max(26, fit));
+}
 
 function buildPiano() {
   const cont = document.getElementById('piano-container');
   cont.innerHTML = '';
+  const W = keyWidth();
+  const GAP = 1;
+  const STRIDE = W + GAP;
+  const BW = Math.round(W * 0.62);
+  const BH = Math.round(W * 1.85);
+  const WH = 110;
+
   let whites = [];
   for (let oct=3; oct<=4; oct++)
     for (let n of WHITE_ORDER) whites.push(n+oct);
 
-  const total = whites.length * STRIDE;
-  cont.style.width = total+'px';
+  const totalW = whites.length * STRIDE;
+  cont.style.width = totalW + 'px';
 
+  // White keys
   whites.forEach((note, i) => {
     const el = document.createElement('div');
-    el.className='white-key'; el.dataset.note=note;
-    el.style.left = (i*STRIDE)+'px';
+    el.className = 'white-key';
+    el.dataset.note = note;
+    el.style.cssText = `left:${i*STRIDE}px; width:${W}px; height:${WH}px;`;
     el.innerHTML = `<span class="key-label">${note}</span>`;
-    el.addEventListener('mousedown', ()=>pressKey(note));
-    el.addEventListener('touchstart', e=>{e.preventDefault();pressKey(note);});
     cont.appendChild(el);
   });
 
+  // Black keys
   for (let oct=3; oct<=4; oct++) {
-    const off = (oct-3)*7*STRIDE;
-    for (const [name, pos] of Object.entries(BLACK_POS)) {
-      const note = name+oct;
+    const octOff = (oct-3) * 7 * STRIDE;
+    Object.entries(BLACK_SLOTS).forEach(([name, slot]) => {
+      const note = name + oct;
       const el = document.createElement('div');
-      el.className='black-key'; el.dataset.note=note;
-      el.style.left = (off + pos*STRIDE + W/2 - 11)+'px';
+      el.className = 'black-key';
+      el.dataset.note = note;
+      // center black key between two white keys
+      const leftEdge = octOff + (slot + 0.72) * STRIDE;
+      el.style.cssText = `left:${leftEdge}px; width:${BW}px; height:${BH}px; bottom:${WH-BH}px;`;
       el.innerHTML = `<span class="key-label">${note}</span>`;
-      el.addEventListener('mousedown', ()=>pressKey(note));
-      el.addEventListener('touchstart', e=>{e.preventDefault();pressKey(note);});
       cont.appendChild(el);
-    }
+    });
+  }
+
+  // Touch handling: use pointer events so multi-touch works
+  cont.addEventListener('pointerdown', onPianoPointer, {passive:false});
+  window.addEventListener('pointerup', onPianoPointerUp);
+}
+
+// Track active pointer→note for visual feedback
+const activePointers = new Map();
+
+function onPianoPointer(e) {
+  e.preventDefault();
+  const note = noteFromPointerEvent(e);
+  if (!note) return;
+  activePointers.set(e.pointerId, note);
+  highlightKeyTouch(note, true);
+  pressKey(note);
+}
+function onPianoPointerUp(e) {
+  const note = activePointers.get(e.pointerId);
+  if (note) {
+    highlightKeyTouch(note, false);
+    activePointers.delete(e.pointerId);
   }
 }
 
+function noteFromPointerEvent(e) {
+  const cont = document.getElementById('piano-container');
+  const rect = cont.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  // Check black keys first (higher z)
+  const blacks = cont.querySelectorAll('.black-key');
+  for (const k of blacks) {
+    const kl = parseFloat(k.style.left);
+    const kw = parseFloat(k.style.width);
+    const kh = parseFloat(k.style.height);
+    const kb = parseFloat(k.style.bottom) || 38;
+    const ky = cont.offsetHeight - kb - kh;
+    if (x >= kl && x <= kl+kw && y >= ky && y <= ky+kh) {
+      return k.dataset.note;
+    }
+  }
+  // Then white keys
+  const whites = cont.querySelectorAll('.white-key');
+  for (const k of whites) {
+    const kl = parseFloat(k.style.left);
+    const kw = parseFloat(k.style.width);
+    if (x >= kl && x <= kl+kw && y >= 0) {
+      return k.dataset.note;
+    }
+  }
+  return null;
+}
+
+function highlightKeyTouch(note, on) {
+  const el = document.querySelector(`[data-note="${note}"]`);
+  if (el) el.classList.toggle('active-touch', on);
+}
+
 function clearHighlights() {
-  document.querySelectorAll('.white-key,.black-key').forEach(k=>k.classList.remove('target','pressed'));
+  document.querySelectorAll('.white-key,.black-key').forEach(k=>k.classList.remove('target','pressed','active-touch'));
 }
 function highlightTarget(noteOrChord) {
   clearHighlights();
   (Array.isArray(noteOrChord)?noteOrChord:[noteOrChord]).forEach(n=>{
     const el=document.querySelector(`[data-note="${n}"]`);
-    if(el) el.classList.add('target');
+    if (el) el.classList.add('target');
   });
+  // Auto-scroll piano to show target key
+  scrollPianoToNote(Array.isArray(noteOrChord)?noteOrChord[0]:noteOrChord);
 }
-function flashKey(note, cls) {
+function flashKey(note) {
   const el=document.querySelector(`[data-note="${note}"]`);
-  if(!el) return;
-  el.classList.add(cls);
-  setTimeout(()=>el.classList.remove(cls), 220);
+  if (!el) return;
+  el.classList.add('pressed');
+  setTimeout(()=>el.classList.remove('pressed'), 200);
 }
 
-// ── Audio ────────────────────────────────────────
+function scrollPianoToNote(note) {
+  const el = document.querySelector(`[data-note="${note}"]`);
+  const scroll = document.getElementById('piano-scroll');
+  if (!el || !scroll) return;
+  const kLeft = parseFloat(el.style.left) || 0;
+  const kWidth = parseFloat(el.style.width) || 32;
+  const scrollW = scroll.clientWidth;
+  const target = kLeft - scrollW/2 + kWidth/2;
+  scroll.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
+}
+
+// ── Audio engine ──────────────────────────────────────────────────
 function ensureAudio() {
   if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-  if (audioCtx.state==='suspended') audioCtx.resume();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
 }
-function playNote(note, dur=0.3, vol=0.16) {
+function playNote(note, dur=0.28, vol=0.15) {
   ensureAudio();
-  const osc=audioCtx.createOscillator();
-  const gain=audioCtx.createGain();
-  osc.type='square';
-  osc.frequency.value=noteFreq(note);
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'square';
+  osc.frequency.value = noteFreq(note);
   gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+dur);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
   osc.connect(gain); gain.connect(audioCtx.destination);
-  osc.start(); osc.stop(audioCtx.currentTime+dur);
+  osc.start(); osc.stop(audioCtx.currentTime + dur);
 }
 function playSFX(type) {
   ensureAudio();
-  if (type==='good')  ['C5','E5','G5'].forEach((n,i)=>setTimeout(()=>playNote(n,0.12,0.1),i*70));
-  else if (type==='bad') { playNote('C3',0.25,0.15); setTimeout(()=>playNote('B2',0.25,0.1),90); }
-  else if (type==='win')  ['C4','E4','G4','C5'].forEach((n,i)=>setTimeout(()=>playNote(n,0.4,0.12),i*110));
+  if (type==='good') ['C5','E5','G5'].forEach((n,i)=>setTimeout(()=>playNote(n,0.12,0.09),i*65));
+  else if (type==='bad') { playNote('C3',0.22,0.14); setTimeout(()=>playNote('B2',0.22,0.09),80); }
+  else if (type==='win') ['C4','E4','G4','C5'].forEach((n,i)=>setTimeout(()=>playNote(n,0.38,0.11),i*105));
 }
 
-// ── Mic ──────────────────────────────────────────
+// ── Microphone + pitch detection ─────────────────────────────────
+function openMicModal() {
+  document.getElementById('mic-modal').classList.add('open');
+  if (state.micActive) {
+    document.getElementById('mic-modal-status').textContent = 'MIC IS ACTIVE ✓';
+    document.getElementById('mic-enable-btn').textContent = 'RE-ENABLE';
+  }
+}
+function closeMicModal() {
+  document.getElementById('mic-modal').classList.remove('open');
+  cancelAnimationFrame(micLevelRAF);
+}
+
 async function startMic() {
-  if (state.micActive) return;
+  document.getElementById('mic-modal-status').textContent = 'REQUESTING PERMISSION...';
+  document.getElementById('mic-enable-btn').disabled = true;
+
   try {
     ensureAudio();
-    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-    const src = audioCtx.createMediaStreamSource(stream);
+
+    // Stop any existing stream
+    if (micStream) micStream.getTracks().forEach(t=>t.stop());
+
+    // Request microphone — explicitly ask for device mic
+    micStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+        channelCount: 1
+      }
+    });
+
+    const source = audioCtx.createMediaStreamSource(micStream);
     analyser = audioCtx.createAnalyser();
     analyser.fftSize = 4096;
-    src.connect(analyser);
+    analyser.smoothingTimeConstant = 0.2;
+    source.connect(analyser);
+
     state.micActive = true;
-    document.getElementById('mic-status').textContent='🎤 ON';
+    document.getElementById('mic-status').textContent = '🎤 ON';
     document.getElementById('mic-status').classList.add('active');
-    const btn=document.getElementById('mic-btn');
-    if(btn) btn.textContent='🎤 ON';
-    if (state.screen==='game') startPitch();
-  } catch(e) {
-    showFeedback('MIC DENIED — CLICK KEYS','bad');
+    document.getElementById('mic-modal-status').textContent = 'MIC ACTIVE — LISTENING ✓';
+    document.getElementById('mic-enable-btn').disabled = false;
+    document.getElementById('mic-enable-btn').textContent = 'RE-ENABLE';
+
+    // Show live level meter in modal
+    showMicLevel();
+
+    // Start pitch loop if in game
+    if (state.screen === 'game') startPitch();
+
+    // Close modal after a moment
+    setTimeout(closeMicModal, 1200);
+
+  } catch(err) {
+    console.error('Mic error:', err);
+    const msg = err.name === 'NotAllowedError'
+      ? 'PERMISSION DENIED — CHECK BROWSER SETTINGS'
+      : 'MIC ERROR: ' + err.message.toUpperCase();
+    document.getElementById('mic-modal-status').textContent = msg;
+    document.getElementById('mic-enable-btn').disabled = false;
   }
 }
 
+function showMicLevel() {
+  const fill = document.getElementById('mic-level-fill');
+  const buf = new Float32Array(analyser ? analyser.fftSize : 256);
+  function loop() {
+    if (!document.getElementById('mic-modal').classList.contains('open')) return;
+    if (analyser) {
+      analyser.getFloatTimeDomainData(buf);
+      let rms=0; for(let v of buf) rms+=v*v;
+      rms=Math.sqrt(rms/buf.length);
+      fill.style.width = Math.min(100, rms*800) + '%';
+    }
+    micLevelRAF = requestAnimationFrame(loop);
+  }
+  loop();
+}
+
+// YIN-style auto-correlation pitch detector
+function autoCorr(buf, sr) {
+  const SIZE = buf.length;
+  let rms=0; for(let v of buf) rms+=v*v; rms=Math.sqrt(rms/SIZE);
+  if (rms < 0.013) return -1;
+
+  let r1=0, r2=SIZE-1;
+  for(let i=0;i<SIZE/2;i++){ if(Math.abs(buf[i])<0.2){r1=i;break;} }
+  for(let i=1;i<SIZE/2;i++){ if(Math.abs(buf[SIZE-i])<0.2){r2=SIZE-i;break;} }
+  const sliced = buf.slice(r1, r2);
+  const N = sliced.length;
+  if (N < 32) return -1;
+
+  const c = new Float32Array(N).fill(0);
+  for(let i=0;i<N;i++) for(let j=0;j<N-i;j++) c[i]+=sliced[j]*sliced[j+i];
+
+  let d=0; while(d<N-1 && c[d]>c[d+1]) d++;
+  let maxVal=-1, maxPos=-1;
+  for(let i=d;i<N;i++) if(c[i]>maxVal){maxVal=c[i];maxPos=i;}
+  if (maxPos<1) return -1;
+
+  const x1=c[maxPos-1], x2=c[maxPos], x3=(maxPos+1<N)?c[maxPos+1]:c[maxPos];
+  const a=(x1+x3-2*x2)/2, b=(x3-x1)/2;
+  let T = maxPos; if(a) T -= b/(2*a);
+  return sr / T;
+}
+
 function noteFromFreq(f) {
-  if (f<100||f>1200) return null;
+  if (f < 100 || f > 1600) return null;
   const n = 12*Math.log2(f/440)+69;
   const r = Math.round(n);
   const oct = Math.floor((r-12)/12);
@@ -547,54 +781,54 @@ function noteFromFreq(f) {
   return NOTES_RANGE.includes(note) ? note : null;
 }
 
-function autoCorr(buf, sr) {
-  let SIZE=buf.length, rms=0;
-  for(let i=0;i<SIZE;i++) rms+=buf[i]*buf[i];
-  rms=Math.sqrt(rms/SIZE);
-  if(rms<0.015) return -1;
-  let r1=0, r2=SIZE-1;
-  for(let i=0;i<SIZE/2;i++) if(Math.abs(buf[i])<0.2){r1=i;break;}
-  for(let i=1;i<SIZE/2;i++) if(Math.abs(buf[SIZE-i])<0.2){r2=SIZE-i;break;}
-  buf=buf.slice(r1,r2); SIZE=buf.length;
-  const c=new Float32Array(SIZE).fill(0);
-  for(let i=0;i<SIZE;i++) for(let j=0;j<SIZE-i;j++) c[i]+=buf[j]*buf[j+i];
-  let d=0; while(c[d]>c[d+1]) d++;
-  let maxVal=-1, maxPos=-1;
-  for(let i=d;i<SIZE;i++) if(c[i]>maxVal){maxVal=c[i];maxPos=i;}
-  if(maxPos<0) return -1;
-  const x1=c[maxPos-1]||0, x2=c[maxPos], x3=c[maxPos+1]||0;
-  const a=(x1+x3-2*x2)/2, b=(x3-x1)/2;
-  let T0=maxPos; if(a) T0-=b/(2*a);
-  return sr/T0;
-}
-
-let lastMicNote=null, micCount=0;
+let lastMicNote=null, micCount=0, lastPressTime=0;
 function startPitch() {
-  const buf=new Float32Array(analyser.fftSize);
+  cancelAnimationFrame(pitchRAF);
+  if (!analyser) return;
+  const buf = new Float32Array(analyser.fftSize);
+  const micDot = document.getElementById('mic-status');
+
   function loop() {
-    if (!state.micActive||state.screen!=='game') { pitchRAF=null; return; }
+    if (!state.micActive || state.screen !== 'game') { pitchRAF=null; return; }
     analyser.getFloatTimeDomainData(buf);
-    const f=autoCorr(buf, audioCtx.sampleRate);
-    if (f>0) {
-      const note=noteFromFreq(f);
+
+    // RMS for visual indicator
+    let rms=0; for(let v of buf) rms+=v*v; rms=Math.sqrt(rms/buf.length);
+    micDot.classList.toggle('listening', rms > 0.02);
+
+    const f = autoCorr(buf, audioCtx.sampleRate);
+    if (f > 0) {
+      const note = noteFromFreq(f);
       if (note) {
-        if (note===lastMicNote) {
+        if (note === lastMicNote) {
           micCount++;
-          if (micCount===3) { pressKey(note,true); micCount=0; lastMicNote=null; }
-        } else { lastMicNote=note; micCount=1; }
+          // Require 3 consistent frames AND at least 200ms since last trigger
+          if (micCount === 3 && Date.now()-lastPressTime > 200) {
+            pressKey(note, true);
+            lastPressTime = Date.now();
+            micCount = 0; lastMicNote = null;
+          }
+        } else {
+          lastMicNote = note; micCount = 1;
+        }
+      } else {
+        lastMicNote = null; micCount = 0;
       }
+    } else {
+      lastMicNote = null; micCount = 0;
     }
-    pitchRAF=requestAnimationFrame(loop);
+    pitchRAF = requestAnimationFrame(loop);
   }
   loop();
 }
 
-// ── Sequence gen ─────────────────────────────────
+// ── Sequence generation ───────────────────────────────────────────
 const CHORD_POOL = [
   ["C3","E3","G3"],["F3","A3","C4"],["G3","B3","D4"],
   ["A3","C4","E4"],["D3","F#3","A3"],["E3","G#3","B3"],
-  ["C3","D#3","G3"],["D3","F3","A3"],["A3","C4","E4"]
+  ["C3","D#3","G3"],["D3","F3","A3"]
 ];
+
 function genSeq(level) {
   const seq=[];
   if (level.chords) {
@@ -614,7 +848,7 @@ function genSeq(level) {
   return seq;
 }
 
-// ── Flow ─────────────────────────────────────────
+// ── Game flow ─────────────────────────────────────────────────────
 function showTitle() {
   hideAll();
   document.getElementById('title-screen').style.display='flex';
@@ -667,8 +901,7 @@ function advanceTarget() {
     state.progress++;
     state.score+=100+(state.lives*10);
     updateHUD(); moveCat(state.progress/state.totalRounds);
-    kittyJump();
-    playSFX('win');
+    kittyJump(); playSFX('win');
     showFeedback('PURR-FECT! ♥','good');
     setTimeout(()=>{ clearFeedback(); nextRound(); }, 850);
     return;
@@ -687,12 +920,12 @@ function renderMelody() {
   }).join('');
 }
 
-// ── Key press ─────────────────────────────────────
+// ── Key press logic ───────────────────────────────────────────────
 function pressKey(note, fromMic=false) {
   if (state.screen!=='game') return;
   ensureAudio();
-  playNote(note, 0.28);
-  flashKey(note,'pressed');
+  if (!fromMic) playNote(note, 0.28);
+  flashKey(note);
   const target=state.sequence[state.currentIdx];
 
   if (Array.isArray(target)) {
@@ -714,7 +947,7 @@ function pressKey(note, fromMic=false) {
       renderMelody();
       playSFX('good');
       showFeedback('♪','good');
-      setTimeout(()=>{ clearFeedback(); advanceTarget(); }, 140);
+      setTimeout(()=>{ clearFeedback(); advanceTarget(); }, 130);
     } else {
       wrongNote();
     }
@@ -723,34 +956,33 @@ function pressKey(note, fromMic=false) {
 
 function wrongNote() {
   if (state.wrongLocked) return;
-  state.wrongLocked=true;
-  state.lives--; updateHUD();
+  state.wrongLocked=true; state.lives--; updateHUD();
   playSFX('bad');
   showFeedback('✗ WRONG!','bad');
-  setTimeout(()=>{ state.wrongLocked=false; clearFeedback(); }, 600);
+  setTimeout(()=>{ state.wrongLocked=false; clearFeedback(); }, 650);
   if (state.lives<=0) setTimeout(showGameOver, 750);
 }
 
-// ── Kitty ─────────────────────────────────────────
+// ── Kitty ─────────────────────────────────────────────────────────
 function moveCat(t) {
   const cat=document.getElementById('kitty');
   const stage=document.getElementById('stage');
-  const max=stage.offsetWidth-110;
-  cat.style.left=(60+t*(max-60))+'px';
+  const max=stage.offsetWidth-100;
+  const left = Math.round((stage.offsetWidth*0.05) + t*(max - stage.offsetWidth*0.05));
+  cat.style.left=left+'px';
 }
 function kittyJump() {
   const cat=document.getElementById('kitty');
-  cat.classList.remove('jump');
-  void cat.offsetWidth;
+  cat.classList.remove('jump'); void cat.offsetWidth;
   cat.classList.add('jump');
   cat.addEventListener('animationend',()=>cat.classList.remove('jump'),{once:true});
 }
 
-// ── Stars ─────────────────────────────────────────
 function updateStars() {
   const el=document.getElementById('progress-stars');
   el.innerHTML='';
-  for (let i=0;i<state.totalRounds;i++) {
+  const maxShow = Math.min(state.totalRounds, 12);
+  for(let i=0;i<maxShow;i++){
     const s=document.createElement('span');
     s.className='star'+(i<state.progress?' lit':'');
     s.textContent=i<state.progress?'★':'☆';
@@ -758,22 +990,19 @@ function updateStars() {
   }
 }
 
-// ── HUD ───────────────────────────────────────────
 function updateHUD() {
   document.getElementById('hud-level').textContent=state.level?state.level.id:'-';
   document.getElementById('hud-score').textContent=state.score;
   const maxL=state.level?.lives||3;
-  document.getElementById('hud-lives').textContent='♥'.repeat(Math.max(0,state.lives))+'♡'.repeat(Math.max(0,maxL-state.lives));
+  document.getElementById('hud-lives').textContent=
+    '♥'.repeat(Math.max(0,state.lives))+'♡'.repeat(Math.max(0,maxL-state.lives));
 }
 
-// ── Win / Over ────────────────────────────────────
 function showWin() {
   state.screen='win'; clearHighlights(); playSFX('win');
   const last=state.level.id===LEVELS.length;
   document.getElementById('win-stars').textContent='★★★';
-  document.getElementById('win-msg').textContent=last
-    ?'YOU BEAT MEAWNO! PIANO CAT MASTER!'
-    :`SCORE: ${state.score}`;
+  document.getElementById('win-msg').textContent=last?'YOU BEAT MEAWNO! PIANO CAT MASTER!':`SCORE: ${state.score}`;
   document.getElementById('next-btn').style.display=last?'none':'';
   document.getElementById('win-screen').style.display='flex';
 }
@@ -783,9 +1012,12 @@ function showGameOver() {
   document.getElementById('gameover-screen').style.display='flex';
 }
 function retryLevel() { startLevel(state.level.id); }
-function nextLevel()  { const nid=state.level.id+1; LEVELS.find(l=>l.id===nid)?startLevel(nid):showLevelSelect(); }
+function nextLevel()  {
+  const nid=state.level.id+1;
+  LEVELS.find(l=>l.id===nid) ? startLevel(nid) : showLevelSelect();
+}
 
-// ── Labels ────────────────────────────────────────
+// ── Labels ────────────────────────────────────────────────────────
 function toggleLabels() {
   state.showLabels=!state.showLabels;
   document.getElementById('piano-container').classList.toggle('show-labels',state.showLabels);
@@ -794,42 +1026,30 @@ function toggleLabels() {
   btn.classList.toggle('active',state.showLabels);
 }
 
-// ── Feedback ──────────────────────────────────────
-function showFeedback(msg,cls) {
-  const el=document.getElementById('feedback');
-  el.textContent=msg; el.className=cls;
-}
-function clearFeedback() {
-  const el=document.getElementById('feedback');
-  el.textContent=''; el.className='';
-}
+function showFeedback(msg,cls) { const el=document.getElementById('feedback'); el.textContent=msg; el.className=cls; }
+function clearFeedback()       { const el=document.getElementById('feedback'); el.textContent=''; el.className=''; }
 
-// ── Stage canvas ──────────────────────────────────
+// ── Stage canvas ──────────────────────────────────────────────────
 function drawStage() {
   const canvas=document.getElementById('stage-canvas');
   const stage=document.getElementById('stage');
   canvas.width=stage.offsetWidth; canvas.height=stage.offsetHeight;
   const ctx=canvas.getContext('2d');
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  const T=18;
+  const T=16;
   ctx.fillStyle='#003a0e'; ctx.strokeStyle='#005010'; ctx.lineWidth=1;
-  const plats=[
-    {x:0.08,y:0.62,w:0.13},{x:0.28,y:0.52,w:0.1},
-    {x:0.46,y:0.62,w:0.1},{x:0.63,y:0.52,w:0.12},
-    {x:0.80,y:0.62,w:0.1}
-  ];
+  const plats=[{x:0.07,y:0.6,w:0.13},{x:0.27,y:0.5,w:0.1},{x:0.45,y:0.6,w:0.1},{x:0.62,y:0.5,w:0.12},{x:0.80,y:0.6,w:0.1}];
   plats.forEach(p=>{
     const px=p.x*canvas.width, py=p.y*canvas.height, pw=p.w*canvas.width;
-    for(let tx=0;tx<pw;tx+=T) {
-      ctx.fillRect(px+tx,py,T-1,T-1);
-      ctx.strokeRect(px+tx,py,T-1,T-1);
-    }
+    for(let tx=0;tx<pw;tx+=T){ ctx.fillRect(px+tx,py,T-1,T-1); ctx.strokeRect(px+tx,py,T-1,T-1); }
   });
-  ctx.fillStyle='#003010'; ctx.font='8px monospace';
-  for(let x=8;x<canvas.width;x+=38) ctx.fillText('✦',x,canvas.height-10);
+  ctx.fillStyle='#002a08'; ctx.font='7px monospace';
+  for(let x=6;x<canvas.width;x+=36) ctx.fillText('✦',x,canvas.height-8);
+  // Reposition cat after resize
+  if (state.level) moveCat(state.progress/state.totalRounds);
 }
 
-// ── Keyboard shortcuts ─────────────────────────────
+// ── Keyboard (desktop) ────────────────────────────────────────────
 const KB = {
   'a':'C3','w':'C#3','s':'D3','e':'D#3','d':'E3',
   'f':'F3','t':'F#3','g':'G3','y':'G#3','h':'A3','u':'A#3','j':'B3',
@@ -842,10 +1062,10 @@ document.addEventListener('keydown', e=>{
   if (note) pressKey(note);
 });
 
-// ── Init ──────────────────────────────────────────
+// ── Init ─────────────────────────────────────────────────────────
 buildPiano();
 drawStage();
-window.addEventListener('resize', drawStage);
+window.addEventListener('resize', ()=>{ buildPiano(); drawStage(); });
 </script>
 
 </body>
