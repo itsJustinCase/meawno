@@ -1,212 +1,942 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MEAWNO | FAST_TRACK</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --g: #00ff41; --gd: #00aa2a; --gk: #003a0e; --gm: #00661a; --bg: #000800;
-            --err: #ff0000; --w: #fdfdfd; --b: #0a0a0a;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MEAWNO | FAST_TRACK</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root {
+  --g: #00ff41; --gd: #00cc33; --gm: #00882a; --gk: #003a0e; --gbg: #001206;
+  --bg: #020d04; --err: #ff3333; --warn: #ffcc00;
+  --w: #e8ffe8; --dim: #005518; --glow: 0 0 8px #00ff41, 0 0 20px #00aa2a;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family:'Press Start 2P',monospace;
+  background:var(--bg);
+  color:var(--g);
+  height:100dvh;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  image-rendering:pixelated;
+}
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Press Start 2P', cursive; }
-        body { background-color: var(--bg); color: var(--g); height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+/* ── SCANLINE OVERLAY ── */
+body::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.18) 2px,rgba(0,0,0,0.18) 4px);
+  pointer-events:none;
+  z-index:9999;
+}
 
-        .overlay { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 800px; margin-top: 20px; overflow-y: auto; padding: 10px; }
-        .lvl-card { border: 2px solid var(--gm); padding: 8px; text-align: center; cursor: pointer; font-size: 6px; line-height: 1.5; }
-        .lvl-card:hover { border-color: var(--g); background: var(--gk); }
+/* ── OVERLAYS ── */
+.overlay {
+  position:fixed;
+  inset:0;
+  background:rgba(0,10,2,0.97);
+  z-index:500;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+.hidden { display:none !important; }
 
-        #hud { height: 40px; border-bottom: 2px solid var(--gm); display: flex; align-items: center; padding: 0 20px; justify-content: space-between; font-size: 8px; }
-        #game-world { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #001f06 0%, #000800 100%); position: relative; }
-        #target-display { font-size: 44px; color: #fff; text-shadow: 0 0 15px var(--g); margin-bottom: 10px; }
-        #track { width: 85%; height: 40px; border-bottom: 1px solid var(--gm); position: relative; margin-bottom: 20px; }
-        #cat { position: absolute; bottom: 5px; left: 0; font-size: 24px; transform: scaleX(-1); transition: left 0.1s linear; }
+/* ── MENU ── */
+#menu-title {
+  font-size:clamp(10px,2vw,16px);
+  color:var(--g);
+  text-shadow:var(--glow);
+  letter-spacing:3px;
+  margin-bottom:8px;
+  animation:blink 1.2s step-end infinite;
+}
+#menu-sub {
+  font-size:8px;
+  color:var(--dim);
+  margin-bottom:24px;
+  letter-spacing:2px;
+}
+@keyframes blink { 50%{opacity:0.4} }
 
-        #piano-scroll { width: 100%; overflow-x: auto; background: #050505; border-top: 4px solid var(--gm); padding: 20px 0; }
-        #piano { display: flex; position: relative; height: 150px; width: fit-content; margin: 0 auto; padding: 0 20px; }
-        .key { position: relative; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; font-size: 6px; }
-        .white { width: 32px; height: 100%; background: var(--w); border: 1px solid #ccc; border-radius: 0 0 4px 4px; color: #888; z-index: 1; }
-        .black { width: 20px; height: 60%; background: var(--b); margin-left: -10px; margin-right: -10px; z-index: 2; border: 1px solid #000; border-radius: 0 0 3px 3px; color: var(--gm); font-size: 5px; }
+.menu-grid {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:6px;
+  width:100%;
+  max-width:700px;
+  overflow-y:auto;
+  padding:4px;
+}
+.lvl-card {
+  border:1px solid var(--dim);
+  padding:10px 6px;
+  text-align:center;
+  cursor:pointer;
+  font-size:6px;
+  line-height:1.8;
+  color:var(--dim);
+  transition:all 0.1s;
+  position:relative;
+  background:var(--gbg);
+}
+.lvl-card:hover {
+  border-color:var(--g);
+  color:var(--g);
+  background:#001f0a;
+  text-shadow:0 0 6px var(--g);
+  box-shadow:inset 0 0 15px rgba(0,255,65,0.08);
+}
+.lvl-card .card-num {
+  display:block;
+  color:var(--gm);
+  font-size:5px;
+  margin-bottom:4px;
+}
+.lvl-card .card-name { font-size:7px; }
 
-        .key.active-right { background: var(--g) !important; color: #000 !important; box-shadow: 0 0 20px var(--g); }
-        .key.active-wrong { background: var(--err) !important; color: #fff !important; }
-        .key.target-hint { border: 2px solid #fff; box-shadow: inset 0 -15px 20px var(--gm); animation: pulse 1s infinite; }
+/* ── HUD ── */
+#hud {
+  height:36px;
+  border-bottom:2px solid var(--gm);
+  display:flex;
+  align-items:center;
+  padding:0 16px;
+  justify-content:space-between;
+  font-size:7px;
+  background:linear-gradient(180deg,#001a07 0%,#000c03 100%);
+  flex-shrink:0;
+  position:relative;
+  z-index:10;
+}
+.hud-btn {
+  cursor:pointer;
+  color:var(--dim);
+  transition:color 0.1s;
+  border:1px solid var(--dim);
+  padding:3px 8px;
+  font-family:'Press Start 2P',monospace;
+  font-size:6px;
+  background:transparent;
+}
+.hud-btn:hover { color:var(--g); border-color:var(--g); }
+#hud-center { display:flex; gap:20px; align-items:center; }
+#lvl-info { color:var(--g); font-size:7px; }
+#score { color:var(--gd); font-size:7px; }
+#mic-status { font-size:6px; color:var(--dim); }
 
-        @keyframes pulse { 50% { filter: brightness(1.3); } }
-        #controls { padding: 15px; background: #000; border-top: 2px solid var(--gm); display: flex; justify-content: center; }
-        .btn { padding: 10px 20px; background: var(--gk); border: 2px solid var(--g); color: var(--g); font-size: 8px; cursor: pointer; }
-        .btn.active { background: var(--g); color: var(--bg); }
-        .hidden { display: none !important; }
-    </style>
+/* ── GAME WORLD ── */
+#game-world {
+  flex:1;
+  position:relative;
+  overflow:hidden;
+  background:#020d04;
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+}
+
+/* Stars background */
+#stars {
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+
+/* Sky gradient */
+#sky {
+  position:absolute;
+  inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%, #001a07 0%, #020d04 100%);
+  pointer-events:none;
+}
+
+/* Target display area */
+#target-area {
+  position:relative;
+  z-index:5;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding-top:12px;
+  flex-shrink:0;
+}
+#target-label { font-size:7px; color:var(--dim); letter-spacing:3px; margin-bottom:4px; }
+#target-display {
+  font-size:clamp(28px,6vw,52px);
+  color:var(--w);
+  text-shadow:0 0 10px var(--g), 0 0 30px rgba(0,255,65,0.4);
+  letter-spacing:4px;
+  min-height:60px;
+  display:flex;
+  align-items:center;
+}
+#note-sequence {
+  display:flex;
+  gap:6px;
+  margin-top:6px;
+  flex-wrap:wrap;
+  justify-content:center;
+  padding:0 10px;
+}
+.seq-note {
+  font-size:6px;
+  padding:3px 6px;
+  border:1px solid var(--dim);
+  color:var(--dim);
+  transition:all 0.15s;
+}
+.seq-note.done { border-color:var(--gm); color:var(--gm); background:rgba(0,100,30,0.2); }
+.seq-note.current { border-color:var(--g); color:var(--g); text-shadow:0 0 6px var(--g); animation:pulse 0.8s ease-in-out infinite; background:rgba(0,255,65,0.08); }
+@keyframes pulse { 0%,100%{box-shadow:none} 50%{box-shadow:0 0 10px rgba(0,255,65,0.4)} }
+
+/* ── PLATFORM / CAT TRACK ── */
+#track-area {
+  position:relative;
+  z-index:5;
+  flex:1;
+  display:flex;
+  align-items:flex-end;
+  min-height:0;
+  overflow:hidden;
+}
+
+#game-canvas {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+}
+
+/* ── PROGRESS BAR ── */
+#progress-bar-wrap {
+  height:18px;
+  background:#000c03;
+  border-top:1px solid var(--gk);
+  border-bottom:1px solid var(--gk);
+  position:relative;
+  display:flex;
+  align-items:center;
+  padding:0 12px;
+  gap:10px;
+  flex-shrink:0;
+}
+#progress-label { font-size:6px; color:var(--dim); white-space:nowrap; }
+#progress-track {
+  flex:1;
+  height:8px;
+  background:#001a07;
+  border:1px solid var(--gk);
+  position:relative;
+  overflow:hidden;
+}
+#progress-fill {
+  height:100%;
+  background:var(--g);
+  width:0%;
+  transition:width 0.3s ease;
+  box-shadow:0 0 6px var(--g);
+  position:relative;
+}
+#progress-fill::after {
+  content:'';
+  position:absolute;
+  right:0;
+  top:0;
+  bottom:0;
+  width:4px;
+  background:#fff;
+  opacity:0.8;
+}
+#progress-count { font-size:6px; color:var(--gd); white-space:nowrap; min-width:40px; text-align:right; }
+
+/* ── PIANO ── */
+#piano-area {
+  border-top:3px solid var(--gm);
+  background:linear-gradient(180deg,#000c03 0%,#010801 100%);
+  flex-shrink:0;
+  overflow:hidden;
+  position:relative;
+}
+#piano-area::before {
+  content:'';
+  position:absolute;
+  top:0; left:0; right:0;
+  height:4px;
+  background:linear-gradient(90deg, transparent, var(--g), transparent);
+  opacity:0.3;
+}
+#piano-scroll {
+  overflow-x:auto;
+  overflow-y:hidden;
+  padding:12px 20px 8px;
+  scrollbar-width:thin;
+  scrollbar-color:var(--gm) var(--gbg);
+}
+#piano-scroll::-webkit-scrollbar { height:4px; }
+#piano-scroll::-webkit-scrollbar-track { background:var(--gbg); }
+#piano-scroll::-webkit-scrollbar-thumb { background:var(--gm); border-radius:2px; }
+
+#piano {
+  display:flex;
+  position:relative;
+  height:120px;
+  width:fit-content;
+  user-select:none;
+}
+.oct-group { display:flex; position:relative; }
+.key {
+  position:relative;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  padding-bottom:6px;
+  cursor:default;
+  transition:all 0.05s;
+}
+.white {
+  width:30px;
+  height:110px;
+  background:linear-gradient(180deg,#d0f0d8 0%,#c0e0c8 100%);
+  border:1px solid #5a8a6a;
+  border-top:2px solid #7abf8a;
+  border-radius:0 0 4px 4px;
+  color:#4a6a50;
+  font-size:5px;
+  z-index:1;
+  margin-right:1px;
+}
+.black {
+  width:18px;
+  height:68px;
+  background:linear-gradient(180deg,#0a1a0c 0%,#020c04 100%);
+  border:1px solid #002a08;
+  border-top:2px solid #004a10;
+  border-radius:0 0 3px 3px;
+  margin-left:-9px;
+  margin-right:-9px;
+  z-index:2;
+  color:var(--gm);
+  font-size:4px;
+}
+
+.key.active-right.white { background:linear-gradient(180deg,#00ff41 0%,#00cc33 100%) !important; color:#000 !important; box-shadow:0 0 15px var(--g), inset 0 0 10px rgba(255,255,255,0.3) !important; border-color:var(--g) !important; }
+.key.active-right.black { background:linear-gradient(180deg,#00cc33 0%,#009926 100%) !important; box-shadow:0 0 12px var(--g) !important; border-color:var(--g) !important; }
+.key.active-wrong.white { background:linear-gradient(180deg,#ff3333 0%,#cc0000 100%) !important; color:#fff !important; box-shadow:0 0 12px var(--err) !important; border-color:var(--err) !important; }
+.key.active-wrong.black { background:linear-gradient(180deg,#cc0000 0%,#990000 100%) !important; box-shadow:0 0 10px var(--err) !important; }
+.key.target-hint.white { background:linear-gradient(180deg,#b0ffc8 0%,#90e8aa 100%) !important; border:2px solid var(--g) !important; animation:hint-pulse 1s ease-in-out infinite; }
+.key.target-hint.black { background:linear-gradient(180deg,#003a15 0%,#001a08 100%) !important; border:1px solid var(--g) !important; animation:hint-pulse 1s ease-in-out infinite; }
+@keyframes hint-pulse { 0%,100%{box-shadow:0 0 6px rgba(0,255,65,0.4)} 50%{box-shadow:0 0 16px rgba(0,255,65,0.9)} }
+
+/* ── MIC BUTTON ── */
+#controls {
+  padding:8px 16px;
+  background:#000c03;
+  border-top:1px solid var(--gk);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-shrink:0;
+}
+#mic-toggle {
+  font-family:'Press Start 2P',monospace;
+  font-size:7px;
+  padding:8px 20px;
+  background:var(--gbg);
+  border:2px solid var(--gm);
+  color:var(--gm);
+  cursor:pointer;
+  transition:all 0.15s;
+  letter-spacing:1px;
+  position:relative;
+  overflow:hidden;
+}
+#mic-toggle::before {
+  content:'●';
+  margin-right:8px;
+  opacity:0.6;
+}
+#mic-toggle:hover { border-color:var(--g); color:var(--g); }
+#mic-toggle.active {
+  background:rgba(0,80,20,0.4);
+  border-color:var(--g);
+  color:var(--g);
+  box-shadow:0 0 12px rgba(0,255,65,0.3);
+  animation:mic-active 2s ease-in-out infinite;
+}
+#mic-toggle.active::before { opacity:1; animation:blink 0.8s step-end infinite; }
+@keyframes mic-active { 0%,100%{box-shadow:0 0 8px rgba(0,255,65,0.2)} 50%{box-shadow:0 0 20px rgba(0,255,65,0.5)} }
+
+#heard-note { font-size:7px; color:var(--dim); letter-spacing:2px; }
+#heard-note span { color:var(--gd); }
+
+/* ── SUCCESS OVERLAY ── */
+#success-overlay .overlay-content {
+  text-align:center;
+  border:2px solid var(--g);
+  padding:40px;
+  background:var(--gbg);
+  box-shadow:0 0 40px rgba(0,255,65,0.2);
+}
+#success-overlay h2 { font-size:14px; color:var(--g); text-shadow:var(--glow); margin-bottom:16px; }
+#success-overlay p { font-size:7px; color:var(--dim); margin-bottom:24px; line-height:2; }
+.btn-primary {
+  font-family:'Press Start 2P',monospace;
+  font-size:8px;
+  padding:12px 28px;
+  background:var(--g);
+  border:none;
+  color:#000;
+  cursor:pointer;
+  letter-spacing:1px;
+  transition:all 0.1s;
+}
+.btn-primary:hover { background:#fff; box-shadow:0 0 20px var(--g); }
+.btn-secondary {
+  font-family:'Press Start 2P',monospace;
+  font-size:7px;
+  padding:8px 20px;
+  background:transparent;
+  border:2px solid var(--dim);
+  color:var(--dim);
+  cursor:pointer;
+  letter-spacing:1px;
+  margin-left:12px;
+  transition:all 0.1s;
+}
+.btn-secondary:hover { border-color:var(--g); color:var(--g); }
+
+/* ── FEEDBACK FLASH ── */
+#feedback {
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%) scale(0);
+  font-size:20px;
+  font-family:'Press Start 2P',monospace;
+  pointer-events:none;
+  z-index:100;
+  transition:none;
+}
+#feedback.show-right { color:var(--g); text-shadow:var(--glow); animation:flash-right 0.5s ease-out forwards; }
+#feedback.show-wrong { color:var(--err); animation:flash-wrong 0.4s ease-out forwards; }
+@keyframes flash-right { 0%{transform:translate(-50%,-50%) scale(0.5);opacity:1} 100%{transform:translate(-50%,-100%) scale(1.4);opacity:0} }
+@keyframes flash-wrong { 0%{transform:translate(-50%,-50%) scale(1.2);opacity:1} 100%{transform:translate(-50%,-50%) scale(0.8);opacity:0} }
+</style>
 </head>
 <body>
 
+<!-- FEEDBACK FLASH -->
+<div id="feedback"></div>
+
+<!-- MENU OVERLAY -->
 <div id="menu-overlay" class="overlay">
-    <h1 style="color: var(--g); font-size: 12px; letter-spacing: 2px;">SELECT_SEQUENCE</h1>
-    <div class="menu-grid" id="menu-grid"></div>
+  <div id="menu-title">MEAWNO // FAST_TRACK</div>
+  <div id="menu-sub">SELECT_SEQUENCE_TO_BEGIN</div>
+  <div class="menu-grid" id="menu-grid"></div>
 </div>
 
+<!-- SUCCESS OVERLAY -->
 <div id="success-overlay" class="overlay hidden">
-    <h2 style="color: var(--g); margin-bottom: 20px;">SEQUENCE_COMPLETE</h2>
-    <button class="btn" onclick="location.reload()">REBOOT_SYSTEM</button>
+  <div class="overlay-content">
+    <h2>SEQUENCE_COMPLETE</h2>
+    <p>SCORE RECORDED<br>SYSTEM READY</p>
+    <button class="btn-primary" onclick="location.reload()">REBOOT_SYSTEM</button>
+    <button class="btn-secondary" onclick="nextLevel()">NEXT_LEVEL</button>
+  </div>
 </div>
 
+<!-- HUD -->
 <div id="hud">
-    <div id="btn-back" style="cursor:pointer;" onclick="location.reload()">[BACK]</div>
-    <div id="lvl-info">READY</div>
+  <button class="hud-btn" onclick="location.reload()">← MENU</button>
+  <div id="hud-center">
+    <div id="lvl-info">SELECT_LEVEL</div>
     <div id="score">SC:0000</div>
+  </div>
+  <div id="mic-status">MIC_OFF</div>
 </div>
 
+<!-- GAME WORLD -->
 <div id="game-world">
+  <div id="sky"></div>
+  <canvas id="stars-canvas"></canvas>
+
+  <div id="target-area">
+    <div id="target-label">PLAY_THIS_NOTE</div>
     <div id="target-display">--</div>
-    <div id="track"><div id="cat">🐈</div></div>
+    <div id="note-sequence"></div>
+  </div>
+
+  <div id="track-area">
+    <canvas id="game-canvas"></canvas>
+  </div>
 </div>
 
-<div id="piano-scroll"><div id="piano"></div></div>
+<!-- PROGRESS -->
+<div id="progress-bar-wrap">
+  <div id="progress-label">PROG</div>
+  <div id="progress-track"><div id="progress-fill"></div></div>
+  <div id="progress-count">0/0</div>
+</div>
 
+<!-- PIANO -->
+<div id="piano-area">
+  <div id="piano-scroll">
+    <div id="piano"></div>
+  </div>
+</div>
+
+<!-- CONTROLS -->
 <div id="controls">
-    <button class="btn" id="mic-toggle">ENGAGE_MIC</button>
+  <div id="heard-note">HEARD: <span id="heard-val">---</span></div>
+  <button id="mic-toggle">ENGAGE_MIC</button>
 </div>
 
 <script>
-    const noteStrings = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-    const levelDB = [
-        { name: "C3_MAJOR", data: ["C3", "D3", "E3", "F3", "G3", "A3", "B3", "C4"] },
-        { name: "C4_MAJOR", data: ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"] },
-        { name: "C5_MAJOR", data: ["C5", "D5", "E5", "F5", "G5", "A5", "B5", "C6"] },
-        { name: "PENTA_C_MAJ", data: ["C4", "D4", "E4", "G4", "A4", "C5"] },
-        { name: "PENTA_A_MIN", data: ["A3", "C4", "D4", "E4", "G4", "A4"] },
-        { name: "C_TRIADS", data: ["C3", "E3", "G3", "C4", "E4", "G4", "C5"] },
-        { name: "G_TRIADS", data: ["G3", "B3", "D4", "G4", "B4", "D5", "G5"] },
-        { name: "F_TRIADS", data: ["F3", "A3", "C4", "F4", "A4", "C5", "F5"] },
-        { name: "INTERVAL_3RD", data: ["C4", "E4", "D4", "F4", "E4", "G4", "F4", "A4", "G4", "B4", "A4", "C5"] },
-        { name: "INTERVAL_4TH", data: ["C4", "F4", "D4", "G4", "E4", "A4", "F4", "B4", "G4", "C5"] },
-        { name: "HOT_CROSS", data: ["E4", "D4", "C4", "E4", "D4", "C4", "C4", "C4", "C4", "C4", "D4", "D4", "D4", "D4", "E4", "D4", "C4"] },
-        { name: "CHROMATIC", data: ["C4", "C#4", "D4", "D#4", "E4", "F4", "F#4", "G4", "G#4", "A4", "A#4", "B4", "C5"] }
-    ];
+const noteStrings = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+const levelDB = [
+  { name:"C3_MAJOR", data:["C3","D3","E3","F3","G3","A3","B3","C4"] },
+  { name:"C4_MAJOR", data:["C4","D4","E4","F4","G4","A4","B4","C5"] },
+  { name:"C5_MAJOR", data:["C5","D5","E5","F5","G5","A5","B5","C6"] },
+  { name:"PENTA_C_MAJ", data:["C4","D4","E4","G4","A4","C5"] },
+  { name:"PENTA_A_MIN", data:["A3","C4","D4","E4","G4","A4"] },
+  { name:"C_TRIADS", data:["C3","E3","G3","C4","E4","G4","C5"] },
+  { name:"G_TRIADS", data:["G3","B3","D4","G4","B4","D5","G5"] },
+  { name:"F_TRIADS", data:["F3","A3","C4","F4","A4","C5","F5"] },
+  { name:"INTERVAL_3RD", data:["C4","E4","D4","F4","E4","G4","F4","A4","G4","B4","A4","C5"] },
+  { name:"INTERVAL_4TH", data:["C4","F4","D4","G4","E4","A4","F4","B4","G4","C5"] },
+  { name:"HOT_CROSS", data:["E4","D4","C4","E4","D4","C4","C4","C4","C4","C4","D4","D4","D4","D4","E4","D4","C4"] },
+  { name:"CHROMATIC", data:["C4","C#4","D4","D#4","E4","F4","F#4","G4","G#4","A4","A#4","B4","C5"] }
+];
 
-    let currentLvl = null, noteIdx = 0, score = 0, audioCtx, analyser, dataArray, micActive = false;
-    let lastHeardNote = "";
+let currentLvl = null, currentLvlIdx = 0, noteIdx = 0, score = 0;
+let audioCtx, analyser, dataArray, micActive = false, lastHeardNote = "";
+let animFrame = null;
 
-    const menuGrid = document.getElementById('menu-grid');
-    levelDB.forEach((lvl, i) => {
-        const div = document.createElement('div');
-        div.className = 'lvl-card';
-        div.innerHTML = `M_${i+1}<br>${lvl.name}`;
-        div.onclick = () => {
-            currentLvl = lvl;
-            noteIdx = 0;
-            document.getElementById('menu-overlay').classList.add('hidden');
-            document.getElementById('lvl-info').innerText = lvl.name;
-            updateTarget();
-        };
-        menuGrid.appendChild(div);
-    });
+// ── STARS ──
+const starsCanvas = document.getElementById('stars-canvas');
+const sc = starsCanvas.getContext('2d');
+let stars = [];
+function initStars() {
+  starsCanvas.style.position = 'absolute';
+  starsCanvas.style.inset = '0';
+  starsCanvas.style.width = '100%';
+  starsCanvas.style.height = '100%';
+  starsCanvas.style.pointerEvents = 'none';
+  starsCanvas.style.zIndex = '1';
+  const w = starsCanvas.parentElement.offsetWidth;
+  const h = starsCanvas.parentElement.offsetHeight;
+  starsCanvas.width = w;
+  starsCanvas.height = h;
+  stars = [];
+  for (let i = 0; i < 80; i++) {
+    stars.push({ x: Math.random()*w, y: Math.random()*h, r: Math.random()*1.5+0.3, bright: Math.random() });
+  }
+  renderStars();
+}
+function renderStars() {
+  sc.clearRect(0, 0, starsCanvas.width, starsCanvas.height);
+  const t = Date.now() / 2000;
+  stars.forEach(s => {
+    const a = 0.2 + 0.6 * Math.abs(Math.sin(t + s.bright * 6.28));
+    sc.beginPath();
+    sc.arc(s.x, s.y, s.r, 0, Math.PI*2);
+    sc.fillStyle = `rgba(0,255,65,${a})`;
+    sc.fill();
+  });
+  requestAnimationFrame(renderStars);
+}
+initStars();
 
-    const piano = document.getElementById('piano');
-    for (let oct = 3; oct <= 5; oct++) {
-        noteStrings.forEach(n => {
-            const key = document.createElement('div');
-            key.className = `key ${n.includes('#') ? 'black' : 'white'}`;
-            key.dataset.note = n + oct;
-            key.innerText = n + oct;
-            piano.appendChild(key);
-        });
+// ── PIXEL CAT CANVAS ──
+const gc = document.getElementById('game-canvas');
+const ctx = gc.getContext('2d');
+let catProgress = 0, catProgressTarget = 0;
+let catBob = 0;
+
+function resizeCanvas() {
+  gc.style.position = 'absolute';
+  gc.style.inset = '0';
+  gc.style.width = '100%';
+  gc.style.height = '100%';
+  gc.width = gc.parentElement.offsetWidth;
+  gc.height = gc.parentElement.offsetHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', () => { resizeCanvas(); initStars(); });
+
+function drawPlatformTrack() {
+  const W = gc.width, H = gc.height;
+  const total = currentLvl ? currentLvl.data.length : 8;
+  const pxPerNote = Math.min((W - 80) / total, 60);
+  const trackW = pxPerNote * total + 40;
+  const startX = (W - trackW) / 2;
+  const groundY = H - 20;
+  const platformH = 16;
+
+  // Draw platforms
+  for (let i = 0; i <= total; i++) {
+    const px = startX + i * pxPerNote;
+    const isAt = i < total && i === noteIdx;
+    const isDone = i < noteIdx;
+    const isCastle = i === total;
+
+    if (isCastle) {
+      drawCastle(ctx, px + 4, groundY - platformH, 40);
+      continue;
     }
 
-    async function toggleMic() {
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const source = audioCtx.createMediaStreamSource(stream);
-            analyser = audioCtx.createAnalyser();
-            analyser.fftSize = 2048;
-            source.connect(analyser);
-            dataArray = new Float32Array(analyser.fftSize);
-        }
-        if (audioCtx.state === 'suspended') await audioCtx.resume();
-        micActive = !micActive;
-        document.getElementById('mic-toggle').classList.toggle('active', micActive);
-        if (micActive) loop();
+    // Platform tile
+    const tileW = pxPerNote - 4;
+    ctx.fillStyle = isDone ? '#00661a' : isAt ? '#00ff41' : '#003a0e';
+    ctx.fillRect(px, groundY - platformH, tileW, platformH);
+    ctx.fillStyle = isDone ? '#008822' : isAt ? '#00cc33' : '#004a14';
+    ctx.fillRect(px, groundY - platformH, tileW, 4); // top highlight
+    ctx.fillStyle = isDone ? '#004410' : isAt ? '#009926' : '#002208';
+    ctx.fillRect(px, groundY - 4, tileW, 4); // bottom shadow
+
+    // Paw print on done tiles
+    if (isDone && tileW > 20) {
+      ctx.fillStyle = '#00aa2a';
+      const cx = px + tileW/2, cy = groundY - platformH/2;
+      ctx.fillRect(cx-3, cy-2, 3, 3);
+      ctx.fillRect(cx+1, cy-2, 3, 3);
+      ctx.fillRect(cx-2, cy+2, 7, 3);
     }
 
-    function autoCorrelate(buf, sampleRate) {
-        let size = buf.length, rms = 0;
-        for (let i=0; i<size; i++) rms += buf[i]*buf[i];
-        if (Math.sqrt(rms/size) < 0.015) return -1;
-        let r1 = 0, r2 = size-1, thres = 0.2;
-        for (let i=0; i<size/2; i++) if (Math.abs(buf[i])<thres) { r1=i; break; }
-        for (let i=1; i<size/2; i++) if (Math.abs(buf[size-i])<thres) { r2=size-i; break; }
-        buf = buf.slice(r1, r2); size = buf.length;
-        let c = new Array(size).fill(0);
-        for (let i=0; i<size; i++) for (let j=0; j<size-i; j++) c[i] += buf[j]*buf[j+i];
-        let d=0; while (c[d]>c[d+1]) d++;
-        let maxval=-1, maxpos=-1;
-        for (let i=d; i<size; i++) if (c[i]>maxval) { maxval=c[i]; maxpos=i; }
-        return sampleRate/maxpos;
+    // Arrow cue on current tile
+    if (isAt) {
+      ctx.fillStyle = '#002208';
+      ctx.fillRect(px + tileW/2 - 3, groundY - platformH - 6, 6, 5);
     }
+  }
 
-    function loop() {
-        if (!micActive || !currentLvl) return;
-        analyser.getFloatTimeDomainData(dataArray);
-        const pitch = autoCorrelate(dataArray, audioCtx.sampleRate);
-        
-        document.querySelectorAll('.key').forEach(k => k.classList.remove('active-right', 'active-wrong'));
-
-        if (pitch !== -1) {
-            const midi = Math.round(12 * (Math.log2(pitch / 440)) + 69);
-            const heard = noteStrings[midi % 12] + (Math.floor(midi / 12) - 1);
-            const target = currentLvl.data[noteIdx];
-            const keyEl = document.querySelector(`.key[data-note="${heard}"]`);
-
-            if (heard === target) {
-                if (keyEl) keyEl.classList.add('active-right');
-                // INSTANT PROGRESSION: No progress bar, just advance
-                if (heard !== lastHeardNote) {
-                    lastHeardNote = heard;
-                    nextNote();
-                }
-            } else if (keyEl) {
-                keyEl.classList.add('active-wrong');
-                lastHeardNote = heard;
-            }
-        } else {
-            lastHeardNote = "";
-        }
-        requestAnimationFrame(loop);
+  // Draw gaps (lines connecting platforms)
+  ctx.strokeStyle = '#001a07';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < total; i++) {
+    const px1 = startX + i * pxPerNote + (pxPerNote - 4);
+    const px2 = startX + (i+1) * pxPerNote;
+    if (px2 > px1 + 1) {
+      ctx.beginPath();
+      ctx.moveTo(px1, groundY - 4);
+      ctx.lineTo(px2, groundY - 4);
+      ctx.stroke();
     }
+  }
 
-    function nextNote() {
-        noteIdx++;
-        const total = currentLvl.data.length;
-        document.getElementById('cat').style.left = (noteIdx / total) * 92 + "%";
-        
-        if (noteIdx >= total) {
-            score += 100;
-            document.getElementById('score').innerText = `SC:${score.toString().padStart(4, '0')}`;
-            document.getElementById('success-overlay').classList.remove('hidden');
-        } else {
-            updateTarget();
-        }
+  // Draw cat
+  catBob = Math.sin(Date.now() / 200) * 1.5;
+  const catX = startX + catProgress * pxPerNote * total - 10;
+  const catY = groundY - platformH - 20 + catBob;
+  drawCat(ctx, catX, catY, false);
+}
+
+function drawCat(ctx, x, y, flipped) {
+  const px = (dx, dy, w, h, color) => {
+    ctx.fillStyle = color;
+    ctx.fillRect(x + (flipped ? -dx - w : dx), y + dy, w, h);
+  };
+  // body
+  px(2, 8, 16, 10, '#00bb33');
+  // head
+  px(3, 2, 14, 10, '#00dd44');
+  // ears
+  px(3, 0, 4, 4, '#009922');
+  px(13, 0, 4, 4, '#009922');
+  // ear tips
+  px(4, 0, 2, 2, '#00ff55');
+  px(14, 0, 2, 2, '#00ff55');
+  // eyes
+  px(6, 4, 3, 3, '#000');
+  px(11, 4, 3, 3, '#000');
+  px(7, 4, 1, 1, '#00ff41');
+  px(12, 4, 1, 1, '#00ff41');
+  // nose
+  px(9, 7, 2, 1, '#ff8888');
+  // whiskers
+  ctx.fillStyle = '#005518';
+  ctx.fillRect(x+1, y+7, 5, 1);
+  ctx.fillRect(x+14, y+7, 5, 1);
+  // legs
+  px(3, 17, 4, 4, '#009922');
+  px(13, 17, 4, 4, '#009922');
+  // tail
+  ctx.fillStyle = '#00aa2a';
+  ctx.fillRect(x + (flipped ? 16 : 0), y + 12, 4, 2);
+  ctx.fillRect(x + (flipped ? 18 : -2), y + 10, 2, 4);
+}
+
+function drawCastle(ctx, x, y, size) {
+  const s = size / 40;
+  const c = '#00882a';
+  const ch = '#00aa33';
+  const cd = '#004a14';
+  const draw = (dx, dy, w, h, col) => {
+    ctx.fillStyle = col;
+    ctx.fillRect(x + dx*s, y + dy*s, w*s, h*s);
+  };
+  // main body
+  draw(4, 20, 32, 20, c);
+  draw(4, 20, 32, 4, ch);
+  // towers
+  draw(0, 10, 12, 30, c);
+  draw(28, 10, 12, 30, c);
+  // merlons
+  for (let i = 0; i < 3; i++) {
+    draw(i*4, 6, 3, 6, c);
+    draw(28+i*4, 6, 3, 6, c);
+  }
+  draw(12, 16, 4, 6, c);
+  draw(20, 16, 4, 6, c);
+  // gate
+  draw(14, 28, 12, 12, cd);
+  draw(15, 28, 10, 8, '#001206');
+  // flag
+  ctx.fillStyle = '#00ff41';
+  ctx.fillRect(x+4*s, y+2*s, 1*s, 8*s);
+  ctx.fillRect(x+5*s, y+2*s, 6*s, 4*s);
+  ctx.fillStyle = '#009922';
+  ctx.fillRect(x+28*s, y, 1*s, 10*s);
+  ctx.fillRect(x+29*s, y, 5*s, 5*s);
+}
+
+function renderGame() {
+  if (!gc.width) return;
+  ctx.clearRect(0, 0, gc.width, gc.height);
+
+  // Draw distant terrain
+  drawBackground();
+
+  if (currentLvl) {
+    // Smooth cat progress
+    catProgress += (catProgressTarget - catProgress) * 0.12;
+    drawPlatformTrack();
+  }
+
+  requestAnimationFrame(renderGame);
+}
+renderGame();
+
+function drawBackground() {
+  const W = gc.width, H = gc.height;
+  // Distant mountains
+  ctx.fillStyle = '#001a07';
+  for (let i = 0; i < 5; i++) {
+    const mx = (W / 5) * i;
+    const mh = 30 + (i % 3) * 15;
+    ctx.beginPath();
+    ctx.moveTo(mx, H);
+    ctx.lineTo(mx + W/10, H - mh);
+    ctx.lineTo(mx + W/5, H);
+    ctx.fill();
+  }
+  // Trees
+  ctx.fillStyle = '#002a0b';
+  for (let i = 0; i < 8; i++) {
+    const tx = (W / 8) * i + 10;
+    const th = 20 + (i % 4) * 8;
+    ctx.fillRect(tx + 4, H - th, 3, th);
+    ctx.beginPath();
+    ctx.moveTo(tx, H - th);
+    ctx.lineTo(tx + 5, H - th - 12);
+    ctx.lineTo(tx + 11, H - th);
+    ctx.fill();
+  }
+  // Ground
+  ctx.fillStyle = '#001a07';
+  ctx.fillRect(0, H - 20, W, 20);
+  ctx.fillStyle = '#002a0b';
+  ctx.fillRect(0, H - 20, W, 3);
+}
+
+// ── PIANO BUILD ──
+const piano = document.getElementById('piano');
+for (let oct = 3; oct <= 5; oct++) {
+  const grp = document.createElement('div');
+  grp.className = 'oct-group';
+  noteStrings.forEach(n => {
+    const key = document.createElement('div');
+    key.className = `key ${n.includes('#') ? 'black' : 'white'}`;
+    key.dataset.note = n + oct;
+    key.innerText = n + oct;
+    grp.appendChild(key);
+  });
+  piano.appendChild(grp);
+}
+
+// ── MENU BUILD ──
+const menuGrid = document.getElementById('menu-grid');
+levelDB.forEach((lvl, i) => {
+  const div = document.createElement('div');
+  div.className = 'lvl-card';
+  div.innerHTML = `<span class="card-num">SEQ_${String(i+1).padStart(2,'0')}</span><span class="card-name">${lvl.name}</span>`;
+  div.onclick = () => startLevel(i);
+  menuGrid.appendChild(div);
+});
+
+function startLevel(idx) {
+  currentLvlIdx = idx;
+  currentLvl = levelDB[idx];
+  noteIdx = 0;
+  catProgress = 0;
+  catProgressTarget = 0;
+  document.getElementById('menu-overlay').classList.add('hidden');
+  document.getElementById('success-overlay').classList.add('hidden');
+  document.getElementById('lvl-info').innerText = currentLvl.name;
+  updateProgress();
+  updateTarget();
+  buildNoteSequence();
+}
+
+function nextLevel() {
+  const next = (currentLvlIdx + 1) % levelDB.length;
+  startLevel(next);
+}
+
+function buildNoteSequence() {
+  const seq = document.getElementById('note-sequence');
+  seq.innerHTML = '';
+  currentLvl.data.forEach((n, i) => {
+    const el = document.createElement('div');
+    el.className = 'seq-note' + (i === 0 ? ' current' : '');
+    el.innerText = n;
+    el.id = `seq-${i}`;
+    seq.appendChild(el);
+  });
+}
+
+function updateNoteSequence() {
+  currentLvl.data.forEach((n, i) => {
+    const el = document.getElementById(`seq-${i}`);
+    if (!el) return;
+    el.className = 'seq-note';
+    if (i < noteIdx) el.classList.add('done');
+    else if (i === noteIdx) el.classList.add('current');
+  });
+}
+
+function updateProgress() {
+  if (!currentLvl) return;
+  const total = currentLvl.data.length;
+  const pct = noteIdx / total * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-count').innerText = `${noteIdx}/${total}`;
+}
+
+// ── MIC / AUDIO ──
+async function toggleMic() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const source = audioCtx.createMediaStreamSource(stream);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 2048;
+    source.connect(analyser);
+    dataArray = new Float32Array(analyser.fftSize);
+  }
+  if (audioCtx.state === 'suspended') await audioCtx.resume();
+  micActive = !micActive;
+  const btn = document.getElementById('mic-toggle');
+  btn.classList.toggle('active', micActive);
+  btn.innerHTML = micActive ? 'MIC_ACTIVE' : 'ENGAGE_MIC';
+  document.getElementById('mic-status').innerText = micActive ? 'MIC_ON' : 'MIC_OFF';
+  if (micActive) loop();
+}
+
+function autoCorrelate(buf, sr) {
+  let size = buf.length, rms = 0;
+  for (let i = 0; i < size; i++) rms += buf[i]*buf[i];
+  if (Math.sqrt(rms/size) < 0.015) return -1;
+  let r1=0, r2=size-1, thres=0.2;
+  for (let i=0; i<size/2; i++) if (Math.abs(buf[i])<thres){r1=i;break;}
+  for (let i=1; i<size/2; i++) if (Math.abs(buf[size-i])<thres){r2=size-i;break;}
+  buf=buf.slice(r1,r2); size=buf.length;
+  let c=new Array(size).fill(0);
+  for (let i=0;i<size;i++) for (let j=0;j<size-i;j++) c[i]+=buf[j]*buf[j+i];
+  let d=0; while(c[d]>c[d+1])d++;
+  let maxval=-1, maxpos=-1;
+  for (let i=d;i<size;i++) if(c[i]>maxval){maxval=c[i];maxpos=i;}
+  return sr/maxpos;
+}
+
+function showFeedback(txt, good) {
+  const fb = document.getElementById('feedback');
+  fb.textContent = txt;
+  fb.className = good ? 'show-right' : 'show-wrong';
+  setTimeout(() => fb.className = '', 500);
+}
+
+function loop() {
+  if (!micActive || !currentLvl) return;
+  analyser.getFloatTimeDomainData(dataArray);
+  const pitch = autoCorrelate(dataArray, audioCtx.sampleRate);
+
+  document.querySelectorAll('.key').forEach(k => k.classList.remove('active-right','active-wrong'));
+
+  if (pitch !== -1) {
+    const midi = Math.round(12*(Math.log2(pitch/440))+69);
+    const heard = noteStrings[midi%12] + (Math.floor(midi/12)-1);
+    const target = currentLvl.data[noteIdx];
+    const keyEl = document.querySelector(`.key[data-note="${heard}"]`);
+
+    document.getElementById('heard-val').textContent = heard;
+
+    if (heard === target) {
+      if (keyEl) keyEl.classList.add('active-right');
+      if (heard !== lastHeardNote) {
+        lastHeardNote = heard;
+        showFeedback('✓', true);
+        nextNote();
+      }
+    } else {
+      if (keyEl) keyEl.classList.add('active-wrong');
+      if (heard !== lastHeardNote) { lastHeardNote = heard; }
     }
+  } else {
+    document.getElementById('heard-val').textContent = '---';
+    lastHeardNote = '';
+  }
+  requestAnimationFrame(loop);
+}
 
-    function updateTarget() {
-        const target = currentLvl.data[noteIdx];
-        document.getElementById('target-display').innerText = target;
-        document.querySelectorAll('.key').forEach(k => {
-            k.classList.remove('target-hint');
-            if (k.dataset.note === target) {
-                k.classList.add('target-hint');
-                k.scrollIntoView({ behavior: 'auto', inline: 'center' });
-            }
-        });
+function nextNote() {
+  noteIdx++;
+  const total = currentLvl.data.length;
+  catProgressTarget = noteIdx / total;
+  updateProgress();
+  updateNoteSequence();
+
+  if (noteIdx >= total) {
+    score += 100;
+    document.getElementById('score').innerText = `SC:${score.toString().padStart(4,'0')}`;
+    setTimeout(() => {
+      document.getElementById('success-overlay').classList.remove('hidden');
+    }, 600);
+  } else {
+    updateTarget();
+  }
+}
+
+function updateTarget() {
+  if (!currentLvl) return;
+  const target = currentLvl.data[noteIdx];
+  document.getElementById('target-display').innerText = target;
+  document.querySelectorAll('.key').forEach(k => {
+    k.classList.remove('target-hint');
+    if (k.dataset.note === target) {
+      k.classList.add('target-hint');
+      k.scrollIntoView({ behavior:'auto', inline:'center', block:'nearest' });
     }
+  });
+}
 
-    document.getElementById('mic-toggle').onclick = toggleMic;
+document.getElementById('mic-toggle').onclick = toggleMic;
 </script>
-
 </body>
 </html>
