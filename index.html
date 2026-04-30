@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MEAWNO</title>
+    <title>MEAWNO | FAST_TRACK</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -14,98 +14,55 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Press Start 2P', cursive; }
         body { background-color: var(--bg); color: var(--g); height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
 
-        #menu-overlay {
-            position: fixed; inset: 0; background: var(--bg); z-index: 1000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
-        }
-
-        .menu-grid {
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
-            width: 100%; max-width: 600px; margin-top: 20px;
-        }
-
-        .lvl-card {
-            border: 2px solid var(--gm); padding: 10px; text-align: center;
-            cursor: pointer; font-size: 7px; transition: 0.1s;
-        }
-
+        .overlay { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 800px; margin-top: 20px; overflow-y: auto; padding: 10px; }
+        .lvl-card { border: 2px solid var(--gm); padding: 8px; text-align: center; cursor: pointer; font-size: 6px; line-height: 1.5; }
         .lvl-card:hover { border-color: var(--g); background: var(--gk); }
 
-        #hud {
-            height: 40px; border-bottom: 2px solid var(--gm);
-            display: flex; align-items: center; padding: 0 20px;
-            justify-content: space-between; font-size: 8px;
-        }
+        #hud { height: 40px; border-bottom: 2px solid var(--gm); display: flex; align-items: center; padding: 0 20px; justify-content: space-between; font-size: 8px; }
+        #game-world { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #001f06 0%, #000800 100%); position: relative; }
+        #target-display { font-size: 44px; color: #fff; text-shadow: 0 0 15px var(--g); margin-bottom: 10px; }
+        #track { width: 85%; height: 40px; border-bottom: 1px solid var(--gm); position: relative; margin-bottom: 20px; }
+        #cat { position: absolute; bottom: 5px; left: 0; font-size: 24px; transform: scaleX(-1); transition: left 0.1s linear; }
 
-        #game-world {
-            flex: 1; display: flex; flex-direction: column; align-items: center;
-            justify-content: center; background: radial-gradient(circle, #001f06 0%, #000800 100%);
-            position: relative;
-        }
-
-        #target-display { font-size: 40px; color: #fff; text-shadow: 0 0 15px var(--g); margin-bottom: 10px; }
-        
-        #track { width: 80%; height: 40px; border-bottom: 1px solid var(--gm); position: relative; margin-bottom: 20px; }
-        #cat { position: absolute; bottom: 5px; left: 0; font-size: 24px; transform: scaleX(-1); transition: left 0.2s; }
-
-        /* Real Piano Proportions */
         #piano-scroll { width: 100%; overflow-x: auto; background: #050505; border-top: 4px solid var(--gm); padding: 20px 0; }
-        #piano { display: flex; position: relative; height: 180px; width: fit-content; margin: 0 auto; padding: 0 20px; }
-        
-        .key { position: relative; cursor: pointer; transition: background 0.1s; }
-        
-        .white {
-            width: 35px; height: 160px; background: var(--w);
-            border: 1px solid #ccc; border-radius: 0 0 4px 4px;
-            z-index: 1; display: flex; align-items: flex-end; justify-content: center;
-            padding-bottom: 10px; font-size: 6px; color: #888;
-        }
-
-        .black {
-            width: 22px; height: 100px; background: var(--b);
-            margin-left: -11px; margin-right: -11px; z-index: 2;
-            border: 1px solid #000; border-radius: 0 0 3px 3px;
-            display: flex; align-items: flex-end; justify-content: center;
-            padding-bottom: 8px; font-size: 5px; color: var(--gm);
-        }
+        #piano { display: flex; position: relative; height: 150px; width: fit-content; margin: 0 auto; padding: 0 20px; }
+        .key { position: relative; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; font-size: 6px; }
+        .white { width: 32px; height: 100%; background: var(--w); border: 1px solid #ccc; border-radius: 0 0 4px 4px; color: #888; z-index: 1; }
+        .black { width: 20px; height: 60%; background: var(--b); margin-left: -10px; margin-right: -10px; z-index: 2; border: 1px solid #000; border-radius: 0 0 3px 3px; color: var(--gm); font-size: 5px; }
 
         .key.active-right { background: var(--g) !important; color: #000 !important; box-shadow: 0 0 20px var(--g); }
         .key.active-wrong { background: var(--err) !important; color: #fff !important; }
-        
-        .key.target-hint { 
-            border: 2px solid #fff; 
-            box-shadow: inset 0 -15px 20px var(--gm);
-            animation: pulse 1s infinite;
-        }
+        .key.target-hint { border: 2px solid #fff; box-shadow: inset 0 -15px 20px var(--gm); animation: pulse 1s infinite; }
 
-        @keyframes pulse {
-            50% { filter: brightness(1.3); }
-        }
-
+        @keyframes pulse { 50% { filter: brightness(1.3); } }
         #controls { padding: 15px; background: #000; border-top: 2px solid var(--gm); display: flex; justify-content: center; }
         .btn { padding: 10px 20px; background: var(--gk); border: 2px solid var(--g); color: var(--g); font-size: 8px; cursor: pointer; }
         .btn.active { background: var(--g); color: var(--bg); }
-        
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<div id="menu-overlay">
-    <h1 style="color: var(--g); font-size: 14px; margin-bottom: 20px;">RANGE: C3_TO_B5</h1>
+<div id="menu-overlay" class="overlay">
+    <h1 style="color: var(--g); font-size: 12px; letter-spacing: 2px;">SELECT_SEQUENCE</h1>
     <div class="menu-grid" id="menu-grid"></div>
 </div>
 
+<div id="success-overlay" class="overlay hidden">
+    <h2 style="color: var(--g); margin-bottom: 20px;">SEQUENCE_COMPLETE</h2>
+    <button class="btn" onclick="location.reload()">REBOOT_SYSTEM</button>
+</div>
+
 <div id="hud">
-    <div id="btn-back" style="cursor:pointer;">[EXIT]</div>
-    <div id="lvl-info">IDLE</div>
+    <div id="btn-back" style="cursor:pointer;" onclick="location.reload()">[BACK]</div>
+    <div id="lvl-info">READY</div>
     <div id="score">SC:0000</div>
 </div>
 
 <div id="game-world">
     <div id="target-display">--</div>
     <div id="track"><div id="cat">🐈</div></div>
-    <div id="pitch-status" style="font-size: 7px; color: var(--gm);">SIGNAL_WAIT</div>
 </div>
 
 <div id="piano-scroll"><div id="piano"></div></div>
@@ -117,35 +74,39 @@
 <script>
     const noteStrings = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
     const levelDB = [
-        { name: "LOW_RANGE_C3", data: ["C3", "E3", "G3"] },
-        { name: "MID_RANGE_C4", data: ["C4", "E4", "G4"] },
-        { name: "HIGH_RANGE_C5", data: ["C5", "E5", "G5"] },
-        { name: "TWINKLE_FULL", data: ["C4", "C4", "G4", "G4", "A4", "A4", "G4", "F4", "F4", "E4", "E4", "D4", "D4", "C4"] },
-        { name: "OCTAVE_JUMP", data: ["C3", "C4", "C5", "C4", "C3"] }
+        { name: "C3_MAJOR", data: ["C3", "D3", "E3", "F3", "G3", "A3", "B3", "C4"] },
+        { name: "C4_MAJOR", data: ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"] },
+        { name: "C5_MAJOR", data: ["C5", "D5", "E5", "F5", "G5", "A5", "B5", "C6"] },
+        { name: "PENTA_C_MAJ", data: ["C4", "D4", "E4", "G4", "A4", "C5"] },
+        { name: "PENTA_A_MIN", data: ["A3", "C4", "D4", "E4", "G4", "A4"] },
+        { name: "C_TRIADS", data: ["C3", "E3", "G3", "C4", "E4", "G4", "C5"] },
+        { name: "G_TRIADS", data: ["G3", "B3", "D4", "G4", "B4", "D5", "G5"] },
+        { name: "F_TRIADS", data: ["F3", "A3", "C4", "F4", "A4", "C5", "F5"] },
+        { name: "INTERVAL_3RD", data: ["C4", "E4", "D4", "F4", "E4", "G4", "F4", "A4", "G4", "B4", "A4", "C5"] },
+        { name: "INTERVAL_4TH", data: ["C4", "F4", "D4", "G4", "E4", "A4", "F4", "B4", "G4", "C5"] },
+        { name: "HOT_CROSS", data: ["E4", "D4", "C4", "E4", "D4", "C4", "C4", "C4", "C4", "C4", "D4", "D4", "D4", "D4", "E4", "D4", "C4"] },
+        { name: "CHROMATIC", data: ["C4", "C#4", "D4", "D#4", "E4", "F4", "F#4", "G4", "G#4", "A4", "A#4", "B4", "C5"] }
     ];
 
-    let currentLvl = null, noteIdx = 0, progress = 0;
-    let audioCtx, analyser, dataArray, micActive = false;
+    let currentLvl = null, noteIdx = 0, score = 0, audioCtx, analyser, dataArray, micActive = false;
+    let lastHeardNote = "";
 
     const menuGrid = document.getElementById('menu-grid');
     levelDB.forEach((lvl, i) => {
         const div = document.createElement('div');
         div.className = 'lvl-card';
-        div.innerHTML = `MOD_${i+1}<br>${lvl.name}`;
+        div.innerHTML = `M_${i+1}<br>${lvl.name}`;
         div.onclick = () => {
             currentLvl = lvl;
             noteIdx = 0;
-            progress = 0;
             document.getElementById('menu-overlay').classList.add('hidden');
             document.getElementById('lvl-info').innerText = lvl.name;
-            document.getElementById('cat').style.left = "0%";
             updateTarget();
         };
         menuGrid.appendChild(div);
     });
 
     const piano = document.getElementById('piano');
-    // Range C3 to B5
     for (let oct = 3; oct <= 5; oct++) {
         noteStrings.forEach(n => {
             const key = document.createElement('div');
@@ -162,12 +123,12 @@
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             const source = audioCtx.createMediaStreamSource(stream);
             analyser = audioCtx.createAnalyser();
-            analyser.fftSize = 4096;
+            analyser.fftSize = 2048;
             source.connect(analyser);
             dataArray = new Float32Array(analyser.fftSize);
         }
+        if (audioCtx.state === 'suspended') await audioCtx.resume();
         micActive = !micActive;
-        document.getElementById('mic-toggle').innerText = micActive ? "DISENGAGE" : "ENGAGE_MIC";
         document.getElementById('mic-toggle').classList.toggle('active', micActive);
         if (micActive) loop();
     }
@@ -175,7 +136,7 @@
     function autoCorrelate(buf, sampleRate) {
         let size = buf.length, rms = 0;
         for (let i=0; i<size; i++) rms += buf[i]*buf[i];
-        if (Math.sqrt(rms/size) < 0.012) return -1;
+        if (Math.sqrt(rms/size) < 0.015) return -1;
         let r1 = 0, r2 = size-1, thres = 0.2;
         for (let i=0; i<size/2; i++) if (Math.abs(buf[i])<thres) { r1=i; break; }
         for (let i=1; i<size/2; i++) if (Math.abs(buf[size-i])<thres) { r2=size-i; break; }
@@ -192,6 +153,7 @@
         if (!micActive || !currentLvl) return;
         analyser.getFloatTimeDomainData(dataArray);
         const pitch = autoCorrelate(dataArray, audioCtx.sampleRate);
+        
         document.querySelectorAll('.key').forEach(k => k.classList.remove('active-right', 'active-wrong'));
 
         if (pitch !== -1) {
@@ -202,20 +164,33 @@
 
             if (heard === target) {
                 if (keyEl) keyEl.classList.add('active-right');
-                progress += 3;
-                const visualPos = ((noteIdx + (progress/100)) / currentLvl.data.length) * 92;
-                document.getElementById('cat').style.left = visualPos + "%";
-                if (progress >= 100) {
-                    progress = 0;
-                    noteIdx++;
-                    if (noteIdx >= currentLvl.data.length) {
-                        alert("STABILIZED");
-                        document.getElementById('menu-overlay').classList.remove('hidden');
-                    } else { updateTarget(); }
+                // INSTANT PROGRESSION: No progress bar, just advance
+                if (heard !== lastHeardNote) {
+                    lastHeardNote = heard;
+                    nextNote();
                 }
-            } else if (keyEl) { keyEl.classList.add('active-wrong'); }
+            } else if (keyEl) {
+                keyEl.classList.add('active-wrong');
+                lastHeardNote = heard;
+            }
+        } else {
+            lastHeardNote = "";
         }
         requestAnimationFrame(loop);
+    }
+
+    function nextNote() {
+        noteIdx++;
+        const total = currentLvl.data.length;
+        document.getElementById('cat').style.left = (noteIdx / total) * 92 + "%";
+        
+        if (noteIdx >= total) {
+            score += 100;
+            document.getElementById('score').innerText = `SC:${score.toString().padStart(4, '0')}`;
+            document.getElementById('success-overlay').classList.remove('hidden');
+        } else {
+            updateTarget();
+        }
     }
 
     function updateTarget() {
@@ -225,13 +200,12 @@
             k.classList.remove('target-hint');
             if (k.dataset.note === target) {
                 k.classList.add('target-hint');
-                k.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                k.scrollIntoView({ behavior: 'auto', inline: 'center' });
             }
         });
     }
 
     document.getElementById('mic-toggle').onclick = toggleMic;
-    document.getElementById('btn-back').onclick = () => document.getElementById('menu-overlay').classList.remove('hidden');
 </script>
 
 </body>
